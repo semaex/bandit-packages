@@ -115,6 +115,27 @@ export class CoreClient {
     return this.send('POST', `/core/v1/artists/${encodeURIComponent(artistId)}/subscription/extend-grace`, { days }, context)
   }
 
+  /**
+   * Alarga la prueba. ⚠ A diferencia de la gracia, el core **no** toma el máximo: fija
+   * `trialEndsAt` a hoy + días, así que un valor menor que lo que queda la acorta. Y sólo
+   * admite una prueba ya caducada.
+   */
+  extendAgencySubscriptionTrial(
+    agencyId: string,
+    days: number,
+    context: CallerContext = {}
+  ): Promise<null> {
+    return this.send('POST', `/core/v1/agencies/${encodeURIComponent(agencyId)}/subscription/extend-trial`, { days }, context)
+  }
+
+  extendArtistSubscriptionTrial(
+    artistId: string,
+    days: number,
+    context: CallerContext = {}
+  ): Promise<null> {
+    return this.send('POST', `/core/v1/artists/${encodeURIComponent(artistId)}/subscription/extend-trial`, { days }, context)
+  }
+
   /** `-1` = ilimitado. El core rechaza un tope por debajo del que concede el plan. */
   changeAgencySubscriptionMaxArtists(
     agencyId: string,
