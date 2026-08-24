@@ -1,0 +1,14 @@
+node_modules/
+dist/
+build/
+*.tgz
+.npmrc
+
+# Nunca commitear el lockfile de una librería: lo resuelve quien la consume
+package-lock.json
+
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
