@@ -62,8 +62,17 @@ export interface SubscriptionRow {
   /** true si el importe viene del precio negociado de la suscripción, no del plan. */
   annualPriceIsOverride: boolean
   promoCode: string | null
-  /** Cuándo se creó ESTA suscripción. Sobrevive a renovaciones y cambios de plan. */
+  /**
+   * Cuándo esta suscripción pasó a ser de pago. `null` si sigue en prueba, o si es anterior
+   * a que existiera el campo: para esas el dato ya estaba sobrescrito y no se inventó.
+   *
+   * ⚠ No confundir con `createdAt` —cuándo se creó la suscripción, que en las que empiezan
+   * por prueba es el inicio del trial— ni con `startsAt`, que es el ciclo en curso y se
+   * reescribe en cada renovación.
+   */
   subscribedAt: string | null
+  /** Alta de la suscripción. En las que vienen de prueba, el inicio del trial. */
+  createdAt: string | null
   trialEndsAt: string | null
   startsAt: string | null
   endsAt: string | null
