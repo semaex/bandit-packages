@@ -16,16 +16,21 @@ export interface CoreClientOptions {
   timeoutMs?: number
   /** Reintentos ante fallo de red o 5xx. Nunca ante 4xx: un 409 no mejora repitiéndolo. */
   retries?: number
-  /**
-   * Solo para desarrollo: el core local se sirve por HTTPS con certificado autofirmado
-   * y nginx redirige el HTTP a HTTPS, así que no hay forma de hablarle en claro.
-   *
-   * ⚠ Apaga la verificación TLS **de todo el proceso** (`NODE_TLS_REJECT_UNAUTHORIZED`),
-   * no solo la de este cliente: Node no deja acotarla por petición sin traerse `undici`
-   * como dependencia. Por eso se ignora en producción, con aviso.
-   */
-  allowInsecureTls?: boolean
 }
+
+/**
+ * ⚠ Aquí hubo un `allowInsecureTls` y se quitó a propósito.
+ *
+ * Apagaba `NODE_TLS_REJECT_UNAUTHORIZED` para todo el proceso, no sólo para este cliente,
+ * porque Node no deja acotar la verificación por petición sin traerse `undici`. Mientras
+ * hubo un único core al que hablar era discutible; en cuanto un mismo proceso apunta a un
+ * core local y a uno de producción, deja de serlo: una vez apagado, las llamadas a
+ * producción también viajan sin verificar.
+ *
+ * La forma correcta de hablar con un core local de certificado autofirmado es arrancar el
+ * proceso con `NODE_EXTRA_CA_CERTS` apuntando a ese certificado. Así la verificación sigue
+ * activa para todo lo demás.
+ */
 
 /**
  * Contexto de quien llama. Lo resuelve cada BFF a su manera — este paquete no sabe de
@@ -56,20 +61,6 @@ export class CoreClient {
 
   constructor(private readonly options: CoreClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/+$/, '')
-
-    if (options.allowInsecureTls) {
-      this.disableTlsVerification()
-    }
-  }
-
-  private disableTlsVerification(): void {
-    if (process.env.NODE_ENV === 'production') {
-      console.warn('[core-client] allowInsecureTls ignorado en producción')
-
-      return
-    }
-
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
   }
 
   // ---------------------------------------------------------------- suscripciones

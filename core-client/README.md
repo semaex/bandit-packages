@@ -38,5 +38,21 @@ const page = await core.searchAgencySubscriptions(
 )
 ```
 
+## Hablar con un core de certificado autofirmado
+
+El core de desarrollo se sirve por HTTPS con un certificado autofirmado y nginx redirige el
+HTTP, así que no hay forma de hablarle en claro. La manera de aceptarlo **sin apagar la
+verificación TLS** es arrancar el proceso con el certificado como CA extra:
+
+```yaml
+environment:
+  - NODE_EXTRA_CA_CERTS=/certs/api_devel_bandit_show.crt
+```
+
+⚠ Este paquete **no** ofrece una opción para saltarse la verificación. La tuvo y se quitó:
+apagaba `NODE_TLS_REJECT_UNAUTHORIZED` para todo el proceso, y en cuanto un mismo proceso
+habla con un core local y con uno de producción —el caso del selector del backoffice— eso
+significa llamar a producción sin verificar el certificado.
+
 El `scope` es **obligatorio** en toda llamada de listado, igual que en el core. Quien vea
 todo pasa `UNRESTRICTED` de forma explícita.
