@@ -73,6 +73,8 @@ export interface SubscriptionRow {
   subscribedAt: string | null
   /** Alta de la suscripción. En las que vienen de prueba, el inicio del trial. */
   createdAt: string | null
+  /** Inicio de la prueba. Sólo el detalle lo usa; en el listado no cabe. */
+  trialStartsAt: string | null
   trialEndsAt: string | null
   startsAt: string | null
   endsAt: string | null
