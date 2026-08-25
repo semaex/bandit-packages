@@ -1,6 +1,6 @@
 export { CoreClient, CoreRequestError } from './client'
 export type { CallerContext, CoreClientOptions } from './client'
-export { UNRESTRICTED, scopeToQuery } from './scope'
-export type { Scope } from './scope'
+export { UNRESTRICTED, scopeToQuery, scopeFromResolved } from './scope'
+export type { Scope, ResolvedScope } from './scope'
 export { SIGNATURE_HEADERS, canonicalString, encodeQuery, signRequest } from './signature'
 export * from './types'

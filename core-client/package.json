@@ -2,13 +2,25 @@
   "name": "@bandit/core-client",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "description": "Cliente compartido del contrato core+BFF de bandit/api (/core/v1): firma HMAC, alcance y tipos.",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
-  "types": "./src/index.ts",
+  "types": "./dist/index.d.ts",
   "files": [
+    "dist",
     "src"
-  ]
+  ],
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepare": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0"
+  }
 }
