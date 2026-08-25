@@ -112,9 +112,14 @@ export interface SubscriptionsSummary {
   totals: SubscriptionsSummaryBucket
 }
 
+/** Centinela para la familia «sin tag común»: los planes Personalizado. */
+export const NO_PLAN_FAMILY = '__none__'
+
 export interface SearchSubscriptionsParams {
   terms?: string
   statuses?: SubscriptionStatus[]
+  /** Familias de plan (`small`, `mini`…). Para los Personalizado, `NO_PLAN_FAMILY`. */
+  planCommonTags?: string[]
   customerTypes?: CustomerType[]
   /** Solo agencias que ya han llegado a su tope. Deja fuera a los artistas. */
   atCapOnly?: boolean

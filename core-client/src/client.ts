@@ -90,6 +90,7 @@ export class CoreClient {
       ...scopeToQuery(scope),
       terms: params.terms,
       statuses: params.statuses,
+      planCommonTags: params.planCommonTags,
       customerTypes: params.customerTypes,
       atCapOnly: params.atCapOnly,
       onlyBilled: params.onlyBilled,
