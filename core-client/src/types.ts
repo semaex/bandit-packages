@@ -82,6 +82,14 @@ export interface SubscriptionRow {
   graceExtendedAt: string | null
   cancelledAt: string | null
   isAutoRenewal: boolean
+  /**
+   * Lo facturado a este cliente en toda su vida, sin IVA y neto de abonos.
+   *
+   * Cuelga del cliente y no de la suscripción, así que sobrevive a que ésta se borre y se
+   * rehaga. Viene calculado por el core porque es columna ordenable: sumarlo aquí obligaría
+   * a ordenar después de paginar, que devuelve la página equivocada.
+   */
+  lifetimeBilled: number
   ownerUserId: string | null
   ownerName: string | null
   ownerEmail: string | null
@@ -130,4 +138,34 @@ export interface SearchSubscriptionsParams {
   orderBy?: string
   limit?: number
   offset?: number
+}
+
+export interface CustomerInvoice {
+  id: string
+  /** Número tal y como se emitió (`:c/:yyyy/:s` y variantes por serie). */
+  number: string
+  date: string | null
+  /** Sin IVA. Negativo en los abonos. */
+  baseAmount: number
+  taxesAmount: number
+  totalAmount: number
+}
+
+export interface CustomerInvoices {
+  items: CustomerInvoice[]
+  /** Suma neta de `baseAmount`. Va aparte porque `items` podría paginarse algún día. */
+  lifetimeBilled: number
+}
+
+export interface BillingMonth {
+  /** `YYYY-MM`. */
+  month: string
+  /** Sin IVA, neto de abonos. Cero en los meses sin facturar, que no faltan de la serie. */
+  baseAmount: number
+  invoices: number
+}
+
+export interface MonthlyBilling {
+  months: BillingMonth[]
+  total: number
 }

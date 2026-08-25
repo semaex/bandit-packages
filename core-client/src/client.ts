@@ -1,6 +1,8 @@
 import { SIGNATURE_HEADERS, encodeQuery, signRequest } from './signature'
 import { type Scope, scopeToQuery } from './scope'
 import type {
+  CustomerInvoices,
+  MonthlyBilling,
   Paginated,
   SearchSubscriptionsParams,
   SubscriptionRow,
@@ -98,6 +100,26 @@ export class CoreClient {
       limit: params.limit,
       offset: params.offset
     }
+  }
+
+  // ------------------------------------------------------------------ facturación
+
+  /** Facturas de un cliente y lo que ha facturado en toda su vida. */
+  findCustomerInvoices(
+    customerType: 'agency' | 'artist',
+    customerId: string,
+    context: CallerContext & { scope: Scope }
+  ): Promise<CustomerInvoices> {
+    return this.get(
+      `/core/v1/customers/${customerType}/${encodeURIComponent(customerId)}/invoices`,
+      scopeToQuery(context.scope),
+      context
+    )
+  }
+
+  /** Serie mensual continua desde la primera factura hasta el mes en curso. */
+  findMonthlyBilling(context: CallerContext & { scope: Scope }): Promise<MonthlyBilling> {
+    return this.get('/core/v1/invoices/monthly-billing', scopeToQuery(context.scope), context)
   }
 
   extendAgencySubscriptionGrace(
