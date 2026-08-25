@@ -86,9 +86,22 @@ export interface SubscriptionRow {
 }
 
 export interface SubscriptionsSummaryBucket {
+  /** Todas las suscripciones del grupo que cumplen el filtro. */
   subscriptions: number
+  /**
+   * Las que generan ingreso: en estado de pago (activa o gracia) y con importe > 0.
+   *
+   * ⚠ Es la cifra de negocio, y **no coincide con `subscriptions`**. No son suscriptores:
+   * las de cortesía, las de plan a medida sin precio pactado —que suelen ser la segunda
+   * agencia de un cliente que paga una sola vez— y las que están en prueba, que tienen
+   * plan y por tanto precio pero todavía no facturan.
+   */
+  subscribers: number
+  /** Importe anual de los `subscribers`, sin IVA. Ni las pruebas ni las cortesías suman. */
   annualPrice: number
-  /** Suscripciones del grupo sin importe calculable — no suman, y esconderlas mentiría. */
+  /** Con importe puesto a 0 a mano. */
+  courtesy: number
+  /** Sin importe calculable: plan a medida sin precio pactado. */
   withoutPrice: number
 }
 
