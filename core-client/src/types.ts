@@ -68,7 +68,11 @@ export interface SubscriptionRow {
   customerType: CustomerType
   customerId: string
   customerName: string
-  customerImage: string | null
+  /**
+   * URL completa del logo de la agencia o de la foto del artista; la compone el core, que es
+   * quien sabe dónde vive cada una — no están en la misma carpeta.
+   */
+  customerImageUrl: string | null
   customerStatus: SubscriberStatus
   customerCountry: string | null
   status: SubscriptionStatus
