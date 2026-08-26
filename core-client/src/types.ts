@@ -36,6 +36,14 @@ export const CUSTOMER_TYPES: CustomerType[] = ['agency', 'artist']
  * Fila del listado unificado. Los campos de tope de artistas llegan a `null` para un
  * artista individual: no tiene tope, y un 0 se leería como "no le caben".
  */
+/**
+ * Cuánto usa un cliente la plataforma: `frequent` último mes, `occasional` hasta tres meses,
+ * `low` hasta un año, `none` más de un año, `never` nunca creó un concierto.
+ */
+export type UsageLevel = 'frequent' | 'occasional' | 'low' | 'none' | 'never'
+
+export const USAGE_LEVELS: UsageLevel[] = ['frequent', 'occasional', 'low', 'none', 'never']
+
 export interface SubscriptionRow {
   subscriptionId: string
   customerType: CustomerType
@@ -100,10 +108,13 @@ export interface SubscriptionRow {
    */
   lastConcertActivityAt: string | null
   /**
-   * El mismo tramo que la actividad de un usuario (`UserActivity`), pero medido sobre esa
-   * fecha: `never` es un cliente que nunca ha creado un concierto.
+   * Cuánto usa la plataforma, medido sobre esa fecha.
+   *
+   * ⚠ Escala propia, **no** la de `UserActivity`: aquélla mide accesos y ésta trabajo, y sus
+   * plazos están atados a la ventana de 90 días de los recuentos de abajo — los dos primeros
+   * niveles son exactamente lo que ésos cubren.
    */
-  usageBand: UserActivity
+  usageLevel: UsageLevel
   /** Conciertos dados de alta en los últimos 90 días. El «cuánto», no el «cuándo». */
   concertsCreatedRecently: number
   /**
@@ -150,11 +161,11 @@ export interface SearchSubscriptionsParams {
   terms?: string
   statuses?: SubscriptionStatus[]
   /**
-   * Tramos de uso (`UserActivity`): cuánto hace que el cliente no toca un concierto. Es una
-   * medida distinta del login — se puede entrar y no hacer nada — y la que contesta a «¿está
+   * Niveles de uso (`UsageLevel`): cuánto hace que el cliente no toca un concierto. Es una
+   * medida distinta del login —se puede entrar y no hacer nada— y la que contesta a «¿está
    * usando Bandit?».
    */
-  usageBands?: string[]
+  usageLevels?: string[]
   /** Familias de plan (`small`, `mini`…). Para los Personalizado, `NO_PLAN_FAMILY`. */
   planCommonTags?: string[]
   customerTypes?: CustomerType[]

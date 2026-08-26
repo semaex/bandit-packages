@@ -110,7 +110,7 @@ export class CoreClient {
       atCapOnly: params.atCapOnly,
       onlyBilled: params.onlyBilled,
       notCancelled: params.notCancelled,
-      usageBands: params.usageBands,
+      usageLevels: params.usageLevels,
       orderBy: params.orderBy,
       limit: params.limit,
       offset: params.offset
