@@ -2,6 +2,7 @@ import { SIGNATURE_HEADERS, encodeQuery, signRequest } from './signature'
 import { type Scope, scopeToQuery } from './scope'
 import type {
   AgencyArtist,
+  AgencyOption,
   ArtistDetail,
   ArtistRow,
   ArtistsSummary,
@@ -219,6 +220,42 @@ export class CoreClient {
       ownerActivities: params.ownerActivities,
       usageLevels: params.usageLevels
     }, context)
+  }
+
+  /**
+   * Agencias para elegir una. Devuelve TODAS, también las que no tienen suscripción: al mover
+   * un artista, la agencia destino puede no tener ninguna todavía.
+   */
+  searchAgencies(
+    params: { terms?: string; limit?: number },
+    context: CallerContext & { scope: Scope }
+  ): Promise<{ items: AgencyOption[] }> {
+    return this.get('/core/v1/agencies/search', {
+      ...scopeToQuery(context.scope),
+      terms: params.terms,
+      limit: params.limit
+    }, context)
+  }
+
+  /**
+   * Mueve un artista a otro dueño: otra agencia (`ownerType` 2) u otro usuario (1).
+   *
+   * ⚠ Puede responder 409 (`agency_has_reached_maximum_artists_number`): el core rechaza la
+   * mudanza si la agencia destino ha llegado a su tope de artistas.
+   */
+  changeArtistOwner(
+    artistId: string,
+    owner: { ownerType: number; ownerId: string },
+    context: CallerContext & { scope: Scope }
+  ): Promise<{ artistId: string; ownerType: number; ownerId: string }> {
+    const query = encodeQuery(scopeToQuery(context.scope))
+
+    return this.send(
+      'POST',
+      `/core/v1/artists/${encodeURIComponent(artistId)}/owner${query ? '?' + query : ''}`,
+      owner,
+      context
+    )
   }
 
   /** Ficha de un artista. */

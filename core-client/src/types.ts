@@ -542,6 +542,21 @@ export interface ArtistsSummary {
   total: number
 }
 
+export interface AgencyOption {
+  id: string
+  name: string | null
+  /** 1 activa, 2 desactivada, 3 caducada, 4 borrada. */
+  status: number
+  country: string | null
+  ownerName: string | null
+  ownerEmail: string | null
+  /** Artistas activos que ya cuelgan de ella. */
+  artistsCount: number
+  /** Tope de su suscripción. `null` = sin suscripción, `-1` = ilimitado. */
+  maxArtists: number | null
+  subscriptionStatus: number | null
+}
+
 export interface SearchArtistsParams {
   terms?: string
   /** Lista separada por comas de estados (`1,2,3`). */
