@@ -192,6 +192,7 @@ export class CoreClient {
       ownerTypes: params.ownerTypes,
       subscriptionStatuses: params.subscriptionStatuses,
       ownerActivities: params.ownerActivities,
+      usageLevels: params.usageLevels,
       orderBy: params.orderBy,
       limit: params.limit,
       offset: params.offset
@@ -213,9 +214,10 @@ export class CoreClient {
       ...scopeToQuery(context.scope),
       terms: params.terms,
       statuses: params.statuses,
-      // La actividad SÍ se aplica: no es una de las dos dimensiones que cuenta, así que el
-      // reparto tiene que ser el de los artistas que se están viendo.
-      ownerActivities: params.ownerActivities
+      // La actividad y el uso SÍ se aplican: no son de las dos dimensiones que cuenta, así
+      // que el reparto tiene que ser el de los artistas que se están viendo.
+      ownerActivities: params.ownerActivities,
+      usageLevels: params.usageLevels
     }, context)
   }
 

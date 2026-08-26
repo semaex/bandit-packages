@@ -486,6 +486,16 @@ export interface ArtistRow {
   ownerActivity: UserActivity
   ownerLastLoginAt: string | null
   /**
+   * Cuándo se trabajó por última vez sobre ESTE artista —crear o editar uno de sus
+   * conciertos—, y en qué nivel cae.
+   *
+   * ⚠ No es la actividad del dueño: un mánager que entra a diario puede tener a un artista
+   * sin tocar desde hace año y medio. La misma escala que el uso de un cliente, mirada más
+   * fino: allí es el trabajo sobre toda la cartera, aquí sobre un artista.
+   */
+  lastConcertActivityAt: string | null
+  usageLevel: UsageLevel
+  /**
    * La suscripción PROPIA del artista. Sólo la tienen los de usuario; `null` significa que
    * está en el plan gratuito.
    */
@@ -538,6 +548,8 @@ export interface SearchArtistsParams {
   statuses?: string
   /** Lista separada por comas de tipos de dueño (`1,2`). */
   ownerTypes?: string
+  /** Niveles de uso (`UsageLevel`) separados por comas. */
+  usageLevels?: string
   /** Estados de suscripción separados por comas; `0` significa «sin suscripción». */
   subscriptionStatuses?: string
   /** Tramos de `UserActivity` separados por comas, del usuario que responde por el artista. */
