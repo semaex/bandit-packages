@@ -440,6 +440,17 @@ export interface ArtistDetail extends ArtistRow {
   lastConcertDate: string | null
 }
 
+export interface ArtistsSummaryBucket {
+  /** `null` es «ninguna suscripción», que no es un estado sino la ausencia de fila. */
+  status: number | null
+  artists: number
+}
+
+export interface ArtistsSummary {
+  buckets: ArtistsSummaryBucket[]
+  total: number
+}
+
 export interface SearchArtistsParams {
   terms?: string
   /** Lista separada por comas de estados (`1,2,3`). */

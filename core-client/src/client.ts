@@ -4,6 +4,7 @@ import type {
   AgencyArtist,
   ArtistDetail,
   ArtistRow,
+  ArtistsSummary,
   BinaryResponse,
   InvoiceDetail,
   BillingForecast,
@@ -190,6 +191,25 @@ export class CoreClient {
       orderBy: params.orderBy,
       limit: params.limit,
       offset: params.offset
+    }, context)
+  }
+
+  /**
+   * Reparto de artistas por estado de suscripción.
+   *
+   * Acepta los mismos filtros que el listado salvo el de suscripción, que el core se salta
+   * porque es la dimensión que está contando: aplicándoselo a sí mismo, elegir un estado
+   * dejaría los demás recuentos a cero.
+   */
+  findArtistsSummary(
+    params: SearchArtistsParams,
+    context: CallerContext & { scope: Scope }
+  ): Promise<ArtistsSummary> {
+    return this.get('/core/v1/artists/summary', {
+      ...scopeToQuery(context.scope),
+      terms: params.terms,
+      statuses: params.statuses,
+      ownerTypes: params.ownerTypes
     }, context)
   }
 
