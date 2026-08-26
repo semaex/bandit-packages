@@ -283,3 +283,34 @@ export interface BillingForecast {
   /** El suelo: lo que entra cada mes sin depender de que caiga una anual. */
   monthlyRecurring: MonthlyRecurring
 }
+
+export interface BinaryResponse {
+  body: Uint8Array
+  contentType: string
+  contentDisposition: string | null
+}
+
+export interface InvoiceLineDetail {
+  id: string
+  /** Concepto ya legible: el core interpola la plantilla con el mismo parser que el PDF. */
+  concept: string
+  baseAmount: number
+  taxesAmount: number
+  totalAmount: number
+  taxesRate: number
+}
+
+export interface InvoiceDetail {
+  id: string
+  number: string
+  serie: string
+  date: string
+  customerId: string
+  sourceType: string
+  isRefund: boolean
+  baseAmount: number
+  taxesAmount: number
+  totalAmount: number
+  billing: InvoiceBillingData
+  lines: InvoiceLineDetail[]
+}

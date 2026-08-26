@@ -2,6 +2,8 @@ import { SIGNATURE_HEADERS, encodeQuery, signRequest } from './signature'
 import { type Scope, scopeToQuery } from './scope'
 import type {
   AgencyArtist,
+  BinaryResponse,
+  InvoiceDetail,
   BillingForecast,
   CustomerInvoices,
   PaginatedInvoices,
@@ -192,6 +194,35 @@ export class CoreClient {
     )
   }
 
+  /** Una factura con sus líneas y el concepto ya legible. */
+  findInvoiceDetail(
+    invoiceId: string,
+    context: CallerContext & { scope: Scope },
+    language = 'es'
+  ): Promise<InvoiceDetail> {
+    return this.get(
+      `/core/v1/invoices/${encodeURIComponent(invoiceId)}`,
+      { ...scopeToQuery(context.scope), language },
+      context
+    )
+  }
+
+  /**
+   * El PDF de una factura, tal cual lo recibió el cliente.
+   *
+   * Va por `requestBinary` y no por `get`, que descodifica JSON: pasar un PDF por
+   * `JSON.parse` no devuelve nada útil, y por `text()` se corrompen los bytes.
+   */
+  fetchInvoicePdf(
+    invoiceId: string,
+    context: CallerContext & { scope: Scope },
+    language = 'es'
+  ): Promise<BinaryResponse> {
+    const query = encodeQuery({ ...scopeToQuery(context.scope), language })
+
+    return this.requestBinary('GET', `/core/v1/invoices/${encodeURIComponent(invoiceId)}/pdf${query ? '?' + query : ''}`, context)
+  }
+
   /** Serie mensual continua desde la primera factura hasta el mes en curso. */
   findMonthlyBilling(context: CallerContext & { scope: Scope }): Promise<MonthlyBilling> {
     return this.get('/core/v1/invoices/monthly-billing', scopeToQuery(context.scope), context)
@@ -323,6 +354,40 @@ export class CoreClient {
       return await this.readResponse<T>(response, requestUri)
     } finally {
       clearTimeout(timeout)
+    }
+  }
+
+  /**
+   * Como `request`, pero devuelve los bytes sin tocar. Firma igual: el perímetro del core no
+   * distingue si lo que vuelve es JSON o un fichero.
+   *
+   * Sin reintentos a propósito: un PDF pesa, y repetir una descarga a medias no la arregla.
+   */
+  async requestBinary(method: string, requestUri: string, context: CallerContext = {}): Promise<BinaryResponse> {
+    const headers: Record<string, string> = {
+      ...signRequest({
+        method,
+        requestUri,
+        body: '',
+        clientId: this.options.clientId,
+        signingSecret: this.options.signingSecret
+      })
+    }
+
+    if (context.userId) {
+      headers[SIGNATURE_HEADERS.actingUser] = context.userId
+    }
+
+    const response = await fetch(`${this.baseUrl}${requestUri}`, { method, headers })
+
+    if (!response.ok) {
+      throw new CoreRequestError(`Core responded ${response.status}`, response.status, null, requestUri)
+    }
+
+    return {
+      body: new Uint8Array(await response.arrayBuffer()),
+      contentType: response.headers.get('content-type') ?? 'application/octet-stream',
+      contentDisposition: response.headers.get('content-disposition')
     }
   }
 
