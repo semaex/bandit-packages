@@ -90,6 +90,27 @@ export interface SubscriptionRow {
    * a ordenar después de paginar, que devuelve la página equivocada.
    */
   lifetimeBilled: number
+  /**
+   * Cuándo tocó este cliente un concierto por última vez —crearlo o editarlo—, en toda su
+   * cartera de artistas.
+   *
+   * ⚠ **No es lo mismo que el último acceso.** Se puede entrar a mirar y no hacer nada, y de
+   * hecho pasa: es la diferencia entre «tiene la sesión abierta» y «está usando Bandit».
+   * `null` significa que nunca ha creado un concierto.
+   */
+  lastConcertActivityAt: string | null
+  /**
+   * El mismo tramo que la actividad de un usuario (`UserActivity`), pero medido sobre esa
+   * fecha: `never` es un cliente que nunca ha creado un concierto.
+   */
+  usageBand: UserActivity
+  /** Conciertos dados de alta en los últimos 90 días. El «cuánto», no el «cuándo». */
+  concertsCreatedRecently: number
+  /**
+   * Hojas de ruta dadas por terminadas en los últimos 90 días. Dice si el cliente usa la
+   * plataforma a fondo: hay quien crea conciertos y no llega nunca aquí.
+   */
+  infoSheetsFinishedRecently: number
   ownerUserId: string | null
   ownerName: string | null
   ownerEmail: string | null
@@ -128,6 +149,12 @@ export const NO_PLAN_FAMILY = '__none__'
 export interface SearchSubscriptionsParams {
   terms?: string
   statuses?: SubscriptionStatus[]
+  /**
+   * Tramos de uso (`UserActivity`): cuánto hace que el cliente no toca un concierto. Es una
+   * medida distinta del login — se puede entrar y no hacer nada — y la que contesta a «¿está
+   * usando Bandit?».
+   */
+  usageBands?: string[]
   /** Familias de plan (`small`, `mini`…). Para los Personalizado, `NO_PLAN_FAMILY`. */
   planCommonTags?: string[]
   customerTypes?: CustomerType[]
