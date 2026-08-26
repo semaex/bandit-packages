@@ -87,6 +87,8 @@ export interface SubscriptionRow {
   /** Importe anual estimado sin IVA. `null` cuando no hay forma de calcularlo. */
   annualPrice: number | null
   /** true si el importe viene del precio negociado de la suscripción, no del plan. */
+  /** El mismo importe con el IVA puesto: lo que el cliente paga de verdad. */
+  annualPriceWithTaxes: number | null
   annualPriceIsOverride: boolean
   promoCode: string | null
   /**
