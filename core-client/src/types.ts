@@ -42,6 +42,25 @@ export const CUSTOMER_TYPES: CustomerType[] = ['agency', 'artist']
  */
 export type UsageLevel = 'frequent' | 'occasional' | 'low' | 'none' | 'never'
 
+export interface CustomerUsageMonth {
+  /** `YYYY-MM`. */
+  month: string
+  concertsCreated: number
+  /** Conciertos que ya existían y se tocaron. Todo el agregado cuelga de esa raíz. */
+  concertsEdited: number
+  /** Hojas de ruta modificadas. */
+  infoSheets: number
+}
+
+export interface CustomerUsage {
+  months: CustomerUsageMonth[]
+  totals: {
+    concertsCreated: number
+    concertsEdited: number
+    infoSheets: number
+  }
+}
+
 export const USAGE_LEVELS: UsageLevel[] = ['frequent', 'occasional', 'low', 'none', 'never']
 
 export interface SubscriptionRow {

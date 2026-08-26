@@ -9,6 +9,7 @@ import type {
   InvoiceDetail,
   BillingForecast,
   CustomerInvoices,
+  CustomerUsage,
   PaginatedInvoices,
   SearchInvoicesParams,
   MonthlyBilling,
@@ -262,6 +263,25 @@ export class CoreClient {
     return this.get(
       `/core/v1/agencies/${encodeURIComponent(agencyId)}/artists`,
       scopeToQuery(context.scope),
+      context
+    )
+  }
+
+  /**
+   * Trabajo del cliente mes a mes.
+   *
+   * ⚠ Son ACCIONES, no conciertos: uno creado y editado el mismo mes cuenta en las dos
+   * series. Sumarlas contesta «cuánto trabajo hubo», que es la pregunta.
+   */
+  findCustomerUsage(
+    customerType: 'agency' | 'artist',
+    customerId: string,
+    months: number,
+    context: CallerContext & { scope: Scope }
+  ): Promise<CustomerUsage> {
+    return this.get(
+      `/core/v1/customers/${customerType}/${encodeURIComponent(customerId)}/usage`,
+      { ...scopeToQuery(context.scope), months },
       context
     )
   }
