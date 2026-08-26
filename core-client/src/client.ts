@@ -112,6 +112,7 @@ export class CoreClient {
       onlyBilled: params.onlyBilled,
       notCancelled: params.notCancelled,
       usageLevels: params.usageLevels,
+      endsAfter: params.endsAfter,
       orderBy: params.orderBy,
       limit: params.limit,
       offset: params.offset

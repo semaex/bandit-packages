@@ -190,6 +190,11 @@ export interface SearchSubscriptionsParams {
    * usando Bandit?».
    */
   usageLevels?: string[]
+  /**
+   * Sólo las que acaban a partir de esta fecha (`YYYY-MM-DD`). Lo usa el panel de problemas de
+   * cobro: un impago de hace un año no es algo que atender, es historia.
+   */
+  endsAfter?: string
   /** Familias de plan (`small`, `mini`…). Para los Personalizado, `NO_PLAN_FAMILY`. */
   planCommonTags?: string[]
   customerTypes?: CustomerType[]
