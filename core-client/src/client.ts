@@ -124,6 +124,27 @@ export class CoreClient {
     }, context)
   }
 
+  /**
+   * Token de sesión para entrar como otro usuario, sin su contraseña.
+   *
+   * ⚠ Lo que autoriza esto es la firma HMAC de este cliente. Su clave vale, por tanto, lo
+   * que la contraseña de todos los usuarios juntos: no la repartas ni la reutilices entre
+   * servicios, porque revocarla es lo único que corta el acceso.
+   */
+  generateImpersonationToken(
+    userId: string,
+    context: CallerContext & { scope: Scope }
+  ): Promise<{ token: string }> {
+    const query = encodeQuery(scopeToQuery(context.scope))
+
+    return this.send(
+      'POST',
+      `/core/v1/users/${encodeURIComponent(userId)}/impersonation-token${query ? '?' + query : ''}`,
+      {},
+      context
+    )
+  }
+
   /** Facturas de un cliente y lo que ha facturado en toda su vida. */
   findCustomerInvoices(
     customerType: 'agency' | 'artist',
