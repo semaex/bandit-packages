@@ -419,11 +419,16 @@ export interface ArtistRow {
   ownerActivity: UserActivity
   ownerLastLoginAt: string | null
   /**
-   * La suscripción que mantiene vivo al artista: la suya si es de un usuario, la de la
-   * agencia si es de una agencia. `null` cuando no hay ninguna.
+   * La suscripción PROPIA del artista. Sólo la tienen los de usuario; `null` significa que
+   * está en el plan gratuito.
    */
   subscriptionStatus: number | null
   subscriptionPlan: string | null
+  /**
+   * La de su agencia. Es contexto de la fila y **no** cuenta como suscripción del artista:
+   * mezclarlas convertía el reparto por estado en el de las agencias con otro nombre.
+   */
+  agencySubscriptionStatus: number | null
   concertsCount: number
   createdAt: string | null
 }
@@ -441,13 +446,22 @@ export interface ArtistDetail extends ArtistRow {
 }
 
 export interface ArtistsSummaryBucket {
-  /** `null` es «ninguna suscripción», que no es un estado sino la ausencia de fila. */
+  /** `null` es el plan gratuito: no es un estado, es la ausencia de suscripción. */
   status: number | null
   artists: number
 }
 
 export interface ArtistsSummary {
-  buckets: ArtistsSummaryBucket[]
+  /** De quién son los artistas. 1 usuario, 2 agencia. */
+  byOwnerType: Array<{ ownerType: ArtistOwnerType; artists: number }>
+  /**
+   * El reparto por estado de suscripción, **sólo de los de usuario**: un artista de agencia
+   * no tiene suscripción propia, vive bajo la de su agencia.
+   */
+  userOwned: {
+    total: number
+    buckets: ArtistsSummaryBucket[]
+  }
   total: number
 }
 
