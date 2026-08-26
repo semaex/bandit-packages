@@ -415,6 +415,15 @@ export interface ArtistRow {
    * vive la regla.
    */
   impersonationUserId: string | null
+  /** Actividad de ESE usuario, el que responde por el artista. */
+  ownerActivity: UserActivity
+  ownerLastLoginAt: string | null
+  /**
+   * La suscripción que mantiene vivo al artista: la suya si es de un usuario, la de la
+   * agencia si es de una agencia. `null` cuando no hay ninguna.
+   */
+  subscriptionStatus: number | null
+  subscriptionPlan: string | null
   concertsCount: number
   createdAt: string | null
 }
@@ -437,6 +446,8 @@ export interface SearchArtistsParams {
   statuses?: string
   /** Lista separada por comas de tipos de dueño (`1,2`). */
   ownerTypes?: string
+  /** Estados de suscripción separados por comas; `0` significa «sin suscripción». */
+  subscriptionStatuses?: string
   orderBy?: string
   limit?: number
   offset?: number

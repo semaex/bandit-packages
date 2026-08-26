@@ -186,6 +186,7 @@ export class CoreClient {
       terms: params.terms,
       statuses: params.statuses,
       ownerTypes: params.ownerTypes,
+      subscriptionStatuses: params.subscriptionStatuses,
       orderBy: params.orderBy,
       limit: params.limit,
       offset: params.offset
