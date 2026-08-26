@@ -188,6 +188,7 @@ export class CoreClient {
       statuses: params.statuses,
       ownerTypes: params.ownerTypes,
       subscriptionStatuses: params.subscriptionStatuses,
+      ownerActivities: params.ownerActivities,
       orderBy: params.orderBy,
       limit: params.limit,
       offset: params.offset
@@ -209,7 +210,9 @@ export class CoreClient {
       ...scopeToQuery(context.scope),
       terms: params.terms,
       statuses: params.statuses,
-      ownerTypes: params.ownerTypes
+      // La actividad SÍ se aplica: no es una de las dos dimensiones que cuenta, así que el
+      // reparto tiene que ser el de los artistas que se están viendo.
+      ownerActivities: params.ownerActivities
     }, context)
   }
 

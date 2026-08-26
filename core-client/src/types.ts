@@ -473,6 +473,8 @@ export interface SearchArtistsParams {
   ownerTypes?: string
   /** Estados de suscripción separados por comas; `0` significa «sin suscripción». */
   subscriptionStatuses?: string
+  /** Tramos de `UserActivity` separados por comas, del usuario que responde por el artista. */
+  ownerActivities?: string
   orderBy?: string
   limit?: number
   offset?: number
