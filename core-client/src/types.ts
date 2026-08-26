@@ -135,6 +135,8 @@ export interface SearchSubscriptionsParams {
   atCapOnly?: boolean
   /** Excluye las suscripciones de cortesía (importe puesto a 0 a mano). */
   onlyBilled?: boolean
+  /** Deja fuera a quien se dio de baja a propósito, para separar la baja del impago. */
+  notCancelled?: boolean
   orderBy?: string
   limit?: number
   offset?: number

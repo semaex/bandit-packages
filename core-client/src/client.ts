@@ -102,6 +102,7 @@ export class CoreClient {
       customerTypes: params.customerTypes,
       atCapOnly: params.atCapOnly,
       onlyBilled: params.onlyBilled,
+      notCancelled: params.notCancelled,
       orderBy: params.orderBy,
       limit: params.limit,
       offset: params.offset
