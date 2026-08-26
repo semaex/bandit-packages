@@ -235,3 +235,15 @@ export interface PaginatedInvoices extends Paginated<InvoiceRow> {
   /** Sumas del conjunto filtrado entero, no de la página. */
   totals: InvoiceTotals
 }
+
+export type ArtistStatus = 1 | 2 | 3 | 4
+
+export interface AgencyArtist {
+  id: string
+  name: string
+  /** URL completa; la compone el core, que es quien sabe dónde viven los ficheros. */
+  imageUrl: string | null
+  /** 1 activo, 2 desactivado, 3 caducado, 4 borrado. */
+  status: ArtistStatus
+  createdAt: string | null
+}

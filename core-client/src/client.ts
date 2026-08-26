@@ -1,6 +1,7 @@
 import { SIGNATURE_HEADERS, encodeQuery, signRequest } from './signature'
 import { type Scope, scopeToQuery } from './scope'
 import type {
+  AgencyArtist,
   CustomerInvoices,
   PaginatedInvoices,
   SearchInvoicesParams,
@@ -141,6 +142,22 @@ export class CoreClient {
       'POST',
       `/core/v1/users/${encodeURIComponent(userId)}/impersonation-token${query ? '?' + query : ''}`,
       {},
+      context
+    )
+  }
+
+  /**
+   * Artistas que cuelgan de una agencia. Devuelve TODOS, también los desactivados: el
+   * recuento del listado cuenta sólo activos porque es el que se compara con el tope del
+   * plan, y la diferencia entre ambos es justo lo que se viene a mirar.
+   */
+  findAgencyArtists(
+    agencyId: string,
+    context: CallerContext & { scope: Scope }
+  ): Promise<{ items: AgencyArtist[] }> {
+    return this.get(
+      `/core/v1/agencies/${encodeURIComponent(agencyId)}/artists`,
+      scopeToQuery(context.scope),
       context
     )
   }
