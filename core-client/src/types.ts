@@ -269,9 +269,17 @@ export interface UpcomingRenewal {
   status: SubscriptionStatus
 }
 
+export interface MonthlyRecurring {
+  /** Sin IVA. Lo que entra cada mes de las que cobran mensualmente. */
+  amount: number
+  subscriptions: number
+}
+
 export interface BillingForecast {
   months: ForecastMonth[]
   total: number
   /** Los cobros uno a uno dentro de la ventana, del más próximo al más lejano. */
   upcoming: UpcomingRenewal[]
+  /** El suelo: lo que entra cada mes sin depender de que caiga una anual. */
+  monthlyRecurring: MonthlyRecurring
 }
