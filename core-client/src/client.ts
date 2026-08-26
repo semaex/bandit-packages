@@ -2,6 +2,8 @@ import { SIGNATURE_HEADERS, encodeQuery, signRequest } from './signature'
 import { type Scope, scopeToQuery } from './scope'
 import type {
   CustomerInvoices,
+  PaginatedInvoices,
+  SearchInvoicesParams,
   MonthlyBilling,
   Paginated,
   SearchSubscriptionsParams,
@@ -103,6 +105,24 @@ export class CoreClient {
   }
 
   // ------------------------------------------------------------------ facturación
+
+  /** Listado de facturas emitidas, de la más reciente a la más antigua. */
+  searchInvoices(
+    params: SearchInvoicesParams,
+    context: CallerContext & { scope: Scope }
+  ): Promise<PaginatedInvoices> {
+    return this.get('/core/v1/invoices/search', {
+      ...scopeToQuery(context.scope),
+      serieGroups: params.serieGroups,
+      customerTypes: params.customerTypes,
+      from: params.from,
+      to: params.to,
+      terms: params.terms,
+      orderBy: params.orderBy,
+      limit: params.limit,
+      offset: params.offset
+    }, context)
+  }
 
   /** Facturas de un cliente y lo que ha facturado en toda su vida. */
   findCustomerInvoices(

@@ -184,3 +184,54 @@ export interface MonthlyBilling {
   months: BillingMonth[]
   total: number
 }
+
+export type InvoiceSerieGroup = 'C' | 'M' | 'R'
+
+export interface InvoiceRow {
+  id: string
+  /** Número tal y como se emitió. */
+  number: string
+  /** Serie literal (`C23`, `21M`…). */
+  serie: string
+  /**
+   * Familia de la serie. Las series llevaron sufijo de año hasta 2023 y desde 2024 no, pero
+   * son la misma serie a lo largo del tiempo: por eso se filtra por familia.
+   */
+  serieGroup: InvoiceSerieGroup | null
+  date: string | null
+  customerId: string
+  customerType: CustomerType
+  /** Nombre de la agencia o artista; cae a la razón social si el cliente ya no existe. */
+  customerName: string | null
+  /** Razón social con la que se emitió, que puede no ser el nombre de hoy del cliente. */
+  billingName: string | null
+  vatNumber: string | null
+  /** Sin IVA. Negativo en los abonos. */
+  baseAmount: number
+  taxesAmount: number
+  totalAmount: number
+}
+
+export interface InvoiceTotals {
+  invoices: number
+  baseAmount: number
+  taxesAmount: number
+  totalAmount: number
+}
+
+export interface SearchInvoicesParams {
+  serieGroups?: string
+  customerTypes?: string
+  /** `YYYY-MM-DD`. */
+  from?: string
+  to?: string
+  terms?: string
+  orderBy?: string
+  limit?: number
+  offset?: number
+}
+
+export interface PaginatedInvoices extends Paginated<InvoiceRow> {
+  /** Sumas del conjunto filtrado entero, no de la página. */
+  totals: InvoiceTotals
+}
