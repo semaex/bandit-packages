@@ -98,6 +98,14 @@ export interface SubscriptionRow {
    * reescribe en cada renovación.
    */
   subscribedAt: string | null
+  /**
+   * Desde cuándo es cliente: el día que pasó a pagar y, si aún no ha pasado, el día que empezó
+   * a probar. Lo calcula el core.
+   *
+   * ⚠ Existe porque es el orden por defecto del listado: ordenando por `subscribedAt`, las
+   * pruebas —que no la tienen— caían todas al final en bloque, justo las que hay que atender.
+   */
+  customerSince: string | null
   /** Alta de la suscripción. En las que vienen de prueba, el inicio del trial. */
   createdAt: string | null
   /** Inicio de la prueba. Sólo el detalle lo usa; en el listado no cabe. */
