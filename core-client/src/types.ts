@@ -140,6 +140,15 @@ export interface SearchSubscriptionsParams {
   offset?: number
 }
 
+export interface InvoiceBillingData {
+  name: string | null
+  vatNumber: string | null
+  address: string | null
+  postalCode: string | null
+  city: string | null
+  country: string | null
+}
+
 export interface CustomerInvoice {
   id: string
   /** Número tal y como se emitió (`:c/:yyyy/:s` y variantes por serie). */
@@ -149,6 +158,12 @@ export interface CustomerInvoice {
   baseAmount: number
   taxesAmount: number
   totalAmount: number
+  /**
+   * Los datos fiscales con los que se emitió ESTA factura. Van con la factura y no con el
+   * cliente porque son los que se declararon ese día: si el cliente cambia de sociedad, las
+   * antiguas siguen diciendo a nombre de quién se emitieron.
+   */
+  billing: InvoiceBillingData
 }
 
 export interface CustomerInvoices {
