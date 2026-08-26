@@ -247,3 +247,31 @@ export interface AgencyArtist {
   status: ArtistStatus
   createdAt: string | null
 }
+
+export interface ForecastMonth {
+  /** `YYYY-MM`. */
+  month: string
+  /** Sin IVA. Lo que se espera cobrar ese mes. */
+  amount: number
+  renewals: number
+}
+
+export interface UpcomingRenewal {
+  subscriptionId: string
+  customerType: CustomerType
+  customerId: string
+  customerName: string
+  /** `YYYY-MM-DD`. */
+  date: string
+  amount: number
+  /** Ciclo medido de la suscripción: 1 mensual, 12 anual. */
+  cycleMonths: number
+  status: SubscriptionStatus
+}
+
+export interface BillingForecast {
+  months: ForecastMonth[]
+  total: number
+  /** Los cobros uno a uno dentro de la ventana, del más próximo al más lejano. */
+  upcoming: UpcomingRenewal[]
+}

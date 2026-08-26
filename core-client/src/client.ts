@@ -2,6 +2,7 @@ import { SIGNATURE_HEADERS, encodeQuery, signRequest } from './signature'
 import { type Scope, scopeToQuery } from './scope'
 import type {
   AgencyArtist,
+  BillingForecast,
   CustomerInvoices,
   PaginatedInvoices,
   SearchInvoicesParams,
@@ -103,6 +104,22 @@ export class CoreClient {
       limit: params.limit,
       offset: params.offset
     }
+  }
+
+  /**
+   * Previsión de cobro de aquí a `months` meses.
+   *
+   * Cuenta sólo lo que se va a cobrar de verdad: activas o en gracia, con renovación
+   * automática puesta y con importe conocido.
+   */
+  findBillingForecast(
+    months: number,
+    context: CallerContext & { scope: Scope }
+  ): Promise<BillingForecast> {
+    return this.get('/core/v1/subscriptions/billing-forecast', {
+      ...scopeToQuery(context.scope),
+      months
+    }, context)
   }
 
   // ------------------------------------------------------------------ facturación
