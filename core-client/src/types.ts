@@ -268,6 +268,11 @@ export interface UpcomingRenewal {
   amount: number
   /** Ciclo medido de la suscripción: 1 mensual, 12 anual. */
   cycleMonths: number
+  /**
+   * Si va a renovar. Las que no, aparecen igual en la lista —son las que hay que ver venir—
+   * pero **no suman a la previsión**: ese dinero no va a entrar.
+   */
+  willRenew: boolean
   status: SubscriptionStatus
 }
 
