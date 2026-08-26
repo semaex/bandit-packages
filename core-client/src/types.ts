@@ -545,6 +545,8 @@ export interface ArtistsSummary {
 export interface AgencyOption {
   id: string
   name: string | null
+  /** URL completa; la compone el core, que es quien sabe dónde viven los ficheros. */
+  imageUrl: string | null
   /** 1 activa, 2 desactivada, 3 caducada, 4 borrada. */
   status: number
   country: string | null
