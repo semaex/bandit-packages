@@ -2,6 +2,8 @@ import { SIGNATURE_HEADERS, encodeQuery, signRequest } from './signature'
 import { type Scope, scopeToQuery } from './scope'
 import type {
   AgencyArtist,
+  ArtistDetail,
+  ArtistRow,
   BinaryResponse,
   InvoiceDetail,
   BillingForecast,
@@ -11,8 +13,12 @@ import type {
   MonthlyBilling,
   Paginated,
   SearchSubscriptionsParams,
+  SearchArtistsParams,
+  SearchUsersParams,
   SubscriptionRow,
-  SubscriptionsSummary
+  SubscriptionsSummary,
+  UserRow,
+  UsersGrowth
 } from './types'
 
 export interface CoreClientOptions {
@@ -143,6 +149,59 @@ export class CoreClient {
       limit: params.limit,
       offset: params.offset
     }, context)
+  }
+
+  // ------------------------------------------------------------------ usuarios
+
+  /** Listado de usuarios de la plataforma. */
+  searchUsers(
+    params: SearchUsersParams,
+    context: CallerContext & { scope: Scope }
+  ): Promise<Paginated<UserRow>> {
+    return this.get('/core/v1/users/search', {
+      ...scopeToQuery(context.scope),
+      terms: params.terms,
+      activity: params.activity,
+      onlyOwners: params.onlyOwners ? '1' : undefined,
+      orderBy: params.orderBy,
+      limit: params.limit,
+      offset: params.offset
+    }, context)
+  }
+
+  /** Altas de usuarios por año, con el acumulado y el reparto por tramo de actividad. */
+  findUsersGrowth(context: CallerContext & { scope: Scope }): Promise<UsersGrowth> {
+    return this.get('/core/v1/users/growth', scopeToQuery(context.scope), context)
+  }
+
+  // ------------------------------------------------------------------ artistas
+
+  /** Listado de artistas con su dueño —usuario o agencia— ya resuelto. */
+  searchArtists(
+    params: SearchArtistsParams,
+    context: CallerContext & { scope: Scope }
+  ): Promise<Paginated<ArtistRow>> {
+    return this.get('/core/v1/artists/search', {
+      ...scopeToQuery(context.scope),
+      terms: params.terms,
+      statuses: params.statuses,
+      ownerTypes: params.ownerTypes,
+      orderBy: params.orderBy,
+      limit: params.limit,
+      offset: params.offset
+    }, context)
+  }
+
+  /** Ficha de un artista. */
+  findArtistDetail(
+    artistId: string,
+    context: CallerContext & { scope: Scope }
+  ): Promise<ArtistDetail> {
+    return this.get(
+      `/core/v1/artists/${encodeURIComponent(artistId)}`,
+      scopeToQuery(context.scope),
+      context
+    )
   }
 
   /**

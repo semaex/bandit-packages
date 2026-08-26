@@ -321,3 +321,123 @@ export interface InvoiceDetail {
   billing: InvoiceBillingData
   lines: InvoiceLineDetail[]
 }
+
+// ------------------------------------------------------------------ usuarios
+
+/**
+ * Cuánto hace que un usuario no entra, en tramos. Lo calcula el core sobre `lastLoginAt`;
+ * no hay ninguna columna «activo» en la plataforma y no se inventa una aquí.
+ */
+export type UserActivity = 'active' | 'recent' | 'dormant' | 'lost' | 'never'
+
+export const USER_ACTIVITIES: UserActivity[] = ['active', 'recent', 'dormant', 'lost', 'never']
+
+export interface UserRow {
+  id: string
+  name: string | null
+  email: string | null
+  /** URL completa; la compone el core, que es quien sabe dónde viven los ficheros. */
+  imageUrl: string | null
+  country: string | null
+  language: string | null
+  createdAt: string | null
+  lastLoginAt: string | null
+  emailVerifiedAt: string | null
+  activity: UserActivity
+  /** `null` si no ha entrado nunca. */
+  daysSinceLastLogin: number | null
+  /** Agencias de las que es dueño. */
+  agenciesOwned: number
+  /** Nombre de la primera que creó; sirve para reconocerlo de un vistazo. */
+  agencyName: string | null
+  /** Artistas suyos (los de owner usuario, no los de sus agencias). */
+  artistsOwned: number
+  /** Agencias en las que participa sin ser el dueño. */
+  memberships: number
+  collaborations: number
+}
+
+export interface SearchUsersParams {
+  terms?: string
+  /** Lista separada por comas de `UserActivity`. */
+  activity?: string
+  /** Sólo quien es dueño de alguna agencia o de algún artista. */
+  onlyOwners?: boolean
+  orderBy?: string
+  limit?: number
+  offset?: number
+}
+
+export interface UsersGrowthYear {
+  year: number
+  registered: number
+  /** Total de usuarios registrados hasta el final de ese año. */
+  cumulative: number
+  /** De los que se registraron ese año, cuántos han entrado en los últimos seis meses. */
+  stillActive: number
+}
+
+export interface UsersGrowth {
+  years: UsersGrowthYear[]
+  totals: {
+    users: number
+    active: number
+    recent: number
+    dormant: number
+    lost: number
+    never: number
+  }
+}
+
+// ------------------------------------------------------------------ artistas
+
+/** 1 usuario, 2 agencia. */
+export type ArtistOwnerType = 1 | 2
+
+export interface ArtistRow {
+  id: string
+  name: string | null
+  abbreviation: string | null
+  imageUrl: string | null
+  /** 1 activo, 2 desactivado, 3 caducado, 4 borrado. */
+  status: ArtistStatus
+  web: string | null
+  musicGenres: string[]
+  country: string | null
+  ownerType: ArtistOwnerType | null
+  ownerId: string | null
+  ownerName: string | null
+  /** Sólo cuando el dueño es un usuario. */
+  ownerUserEmail: string | null
+  /**
+   * Con qué usuario hay que entrar en la app para ver a este artista: el dueño si es de un
+   * usuario, el dueño de la agencia si es de una agencia. Lo resuelve el core, que es donde
+   * vive la regla.
+   */
+  impersonationUserId: string | null
+  concertsCount: number
+  createdAt: string | null
+}
+
+export interface ArtistDetail extends ArtistRow {
+  updatedAt: string | null
+  deactivatedAt: string | null
+  expiredAt: string | null
+  /** Estado de la agencia dueña, cuando lo es. Un artista caduca con su agencia. */
+  agencyStatus: number | null
+  collaboratorsCount: number
+  crewMembersCount: number
+  /** `YYYY-MM-DD` del último concierto con fecha, o `null`. */
+  lastConcertDate: string | null
+}
+
+export interface SearchArtistsParams {
+  terms?: string
+  /** Lista separada por comas de estados (`1,2,3`). */
+  statuses?: string
+  /** Lista separada por comas de tipos de dueño (`1,2`). */
+  ownerTypes?: string
+  orderBy?: string
+  limit?: number
+  offset?: number
+}
