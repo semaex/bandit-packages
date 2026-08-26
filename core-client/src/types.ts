@@ -46,13 +46,11 @@ export interface CustomerUsageMonth {
   /** `YYYY-MM`. */
   month: string
   concertsCreated: number
-  /** Conciertos que ya existían y se tocaron. Todo el agregado cuelga de esa raíz. */
-  concertsEdited: number
   /**
-   * Hojas de ruta modificadas (`updated_at > created_at`). La fila nace con el concierto, así
-   * que sin esa condición cada alta contaría como una hoja trabajada.
+   * Conciertos que ya existían y se tocaron, mirando el agregado entero: caché, recinto,
+   * horarios, cuentas, hoja de ruta… La raíz sola se queda en la mitad.
    */
-  infoSheets: number
+  concertsEdited: number
 }
 
 export interface CustomerUsage {
@@ -60,7 +58,6 @@ export interface CustomerUsage {
   totals: {
     concertsCreated: number
     concertsEdited: number
-    infoSheets: number
   }
 }
 
@@ -139,15 +136,6 @@ export interface SubscriptionRow {
   usageLevel: UsageLevel
   /** Conciertos dados de alta en los últimos 90 días. El «cuánto», no el «cuándo». */
   concertsCreatedRecently: number
-  /**
-   * Hojas de ruta **modificadas** en los últimos 90 días. Dice si el cliente usa la
-   * plataforma a fondo: hay quien crea conciertos y no llega nunca aquí.
-   *
-   * ⚠ Modificada, no «terminada»: `is_finished` es un estado, no un acto — una hoja acabada
-   * hace dos años y retocada ayer no es trabajo de ayer, y una que se está redactando ahora
-   * sí lo es. Es el mismo número que la serie del gráfico de la ficha.
-   */
-  infoSheetsRecently: number
   ownerUserId: string | null
   ownerName: string | null
   ownerEmail: string | null
