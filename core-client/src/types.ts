@@ -42,6 +42,9 @@ export const CUSTOMER_TYPES: CustomerType[] = ['agency', 'artist']
  */
 export type UsageLevel = 'frequent' | 'occasional' | 'low' | 'none' | 'never'
 
+/** Hacia dónde va el trabajo del cliente comparado consigo mismo. */
+export type UsageTrend = 'rising' | 'falling'
+
 export interface CustomerUsageMonth {
   /** `YYYY-MM`. */
   month: string
@@ -154,11 +157,13 @@ export interface SubscriptionRow {
   concertsWorkedRecently: number
   concertsWorkedPrevious: number
   /**
-   * Cuánto ha caído su trabajo respecto a los dos meses anteriores, en tanto por uno
-   * (0.91 = hace un 9 % de lo que hacía). `null` si no hay caída, o si antes no trabajaba lo
-   * bastante como para que signifique algo.
+   * Cuánto ha cambiado su trabajo respecto a la ventana anterior, en tanto por uno: `-0.91` es
+   * «hace un 9 % de lo que hacía» y `2.5`, «hace tres veces y media más». `null` si antes no
+   * trabajaba lo bastante como para que signifique algo.
    */
-  usageDrop: number | null
+  usageTrendRatio: number | null
+  /** El tramo de esa variación, o `null` si no cambió lo suficiente. */
+  usageTrend: UsageTrend | null
   ownerUserId: string | null
   ownerName: string | null
   ownerEmail: string | null
@@ -203,6 +208,12 @@ export interface SearchSubscriptionsParams {
    * usando Bandit?».
    */
   usageLevels?: string[]
+  /**
+   * Hacia dónde va su trabajo comparado consigo mismo: `falling` (hace menos de un tercio que
+   * en la ventana anterior) o `rising` (más del triple). Es una medida distinta del nivel de
+   * uso, que sólo mira la recencia.
+   */
+  usageTrends?: string[]
   /**
    * Sólo las que acaban a partir de esta fecha (`YYYY-MM-DD`). Lo usa el panel de problemas de
    * cobro: un impago de hace un año no es algo que atender, es historia.
