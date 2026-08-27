@@ -278,6 +278,8 @@ export interface InvoiceRow {
   customerType: CustomerType
   /** Nombre de la agencia o artista; cae a la razón social si el cliente ya no existe. */
   customerName: string | null
+  /** Logo de la agencia o foto del artista, ya compuesta por el core. */
+  customerImageUrl: string | null
   /** Razón social con la que se emitió, que puede no ser el nombre de hoy del cliente. */
   billingName: string | null
   vatNumber: string | null
