@@ -150,6 +150,15 @@ export interface SubscriptionRow {
   usageLevel: UsageLevel
   /** Conciertos dados de alta en los últimos 90 días. El «cuánto», no el «cuándo». */
   concertsCreatedRecently: number
+  /** Conciertos TOCADOS —creados o editados— en la ventana de uso, y en la anterior. */
+  concertsWorkedRecently: number
+  concertsWorkedPrevious: number
+  /**
+   * Cuánto ha caído su trabajo respecto a los dos meses anteriores, en tanto por uno
+   * (0.91 = hace un 9 % de lo que hacía). `null` si no hay caída, o si antes no trabajaba lo
+   * bastante como para que signifique algo.
+   */
+  usageDrop: number | null
   ownerUserId: string | null
   ownerName: string | null
   ownerEmail: string | null
@@ -206,6 +215,12 @@ export interface SearchSubscriptionsParams {
   customerIds?: string[]
   /** Solo agencias que ya han llegado a su tope. Deja fuera a los artistas. */
   atCapOnly?: boolean
+  /**
+   * Solo los que están dejando de usar Bandit: los que se han callado (dos meses sin tocar un
+   * concierto) **y** los que se están cayendo (siguen entrando pero hacen una fracción de lo
+   * que hacían). La segunda no la ve la escala de uso.
+   */
+  atRisk?: boolean
   /** Excluye las suscripciones de cortesía (importe puesto a 0 a mano). */
   onlyBilled?: boolean
   /** Deja fuera a quien se dio de baja a propósito, para separar la baja del impago. */
