@@ -366,6 +366,21 @@ export interface BillingForecast {
   monthlyRecurring: MonthlyRecurring
 }
 
+/** Un periodo de la serie de altas y bajas: un mes (`2026-08`) o un año (`2026`). */
+export interface CustomerFlowPeriod {
+  period: string
+  joined: number
+  left: number
+  /** Clientes en pie al cierre del periodo: altas menos bajas desde el principio. */
+  active: number
+}
+
+export interface CustomerFlow {
+  months: CustomerFlowPeriod[]
+  years: CustomerFlowPeriod[]
+  totals: { joined: number; left: number; active: number }
+}
+
 export interface BinaryResponse {
   body: Uint8Array
   contentType: string

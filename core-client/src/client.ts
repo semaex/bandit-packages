@@ -9,6 +9,7 @@ import type {
   BinaryResponse,
   InvoiceDetail,
   BillingForecast,
+  CustomerFlow,
   CustomerInvoices,
   CustomerUsage,
   PaginatedInvoices,
@@ -134,6 +135,16 @@ export class CoreClient {
       ...scopeToQuery(context.scope),
       months
     }, context)
+  }
+
+  /**
+   * Altas y bajas de clientes de pago, por mes y por año, con el acumulado.
+   *
+   * Sin parámetros: es todo el histórico. Recortarlo por arriba dejaría el acumulado sin
+   * punto de partida.
+   */
+  findCustomerFlow(context: CallerContext & { scope: Scope }): Promise<CustomerFlow> {
+    return this.get('/core/v1/subscriptions/customer-flow', scopeToQuery(context.scope), context)
   }
 
   // ------------------------------------------------------------------ facturación
