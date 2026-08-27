@@ -207,6 +207,29 @@ export interface SubscriptionsSummary {
 /** Centinela para la familia «sin tag común»: los planes Personalizado. */
 export const NO_PLAN_FAMILY = '__none__'
 
+/**
+ * Un plan del catálogo.
+ *
+ * ⚠ El mismo plan aparece varias veces con ids distintos: una fila por convocatoria y
+ * periodicidad. Agruparlas —normalmente por `name`— es cosa de quien lo pinta.
+ */
+export interface SubscriptionPlan {
+  id: string
+  name: string
+  customerType: CustomerType
+  /** Familia (`mini`, `small`, `pro`…). Es más gruesa que el nombre: Pack 1 y Pack 3 son `mini`. */
+  commonTag: string | null
+  /** La etiqueta del plan, que lleva la convocatoria y la periodicidad: `2025-pack-3-yearly`. */
+  tag: string
+  /** 1 mensual, 2 anual, -1 sin periodo (los planes a medida). */
+  intervalType: number | null
+  price: number | null
+  /** Si se puede contratar hoy. La mayoría de los suscriptores están en planes que ya no. */
+  isVisible: boolean
+  /** Cuántas suscripciones hay en este plan concreto. */
+  subscriptions: number
+}
+
 export interface SearchSubscriptionsParams {
   terms?: string
   statuses?: SubscriptionStatus[]
@@ -240,6 +263,14 @@ export interface SearchSubscriptionsParams {
   customerTypes?: CustomerType[]
   /** Clientes concretos, por id de agencia o de artista. */
   customerIds?: string[]
+  /**
+   * Planes concretos, por id.
+   *
+   * ⚠ Por id y no por nombre: un mismo plan existe varias veces —«Pack 3» son cuatro, dos
+   * convocatorias por dos periodicidades— y además hay suscripciones cuyo plan ya no está en
+   * la tabla, que no tienen nombre por el que filtrar.
+   */
+  planIds?: string[]
   /** Solo agencias que ya han llegado a su tope. Deja fuera a los artistas. */
   atCapOnly?: boolean
   /**

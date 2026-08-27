@@ -20,6 +20,7 @@ import type {
   SearchSubscriptionsParams,
   SearchArtistsParams,
   SearchUsersParams,
+  SubscriptionPlan,
   SubscriptionRow,
   SubscriptionsSummary,
   UserRow,
@@ -112,6 +113,7 @@ export class CoreClient {
       planCommonTags: params.planCommonTags,
       customerTypes: params.customerTypes,
       customerIds: params.customerIds,
+      planIds: params.planIds,
       atCapOnly: params.atCapOnly,
       atRisk: params.atRisk,
       onlyBilled: params.onlyBilled,
@@ -124,6 +126,16 @@ export class CoreClient {
       limit: params.limit,
       offset: params.offset
     }
+  }
+
+  /**
+   * El catálogo de planes de los dos tipos de cliente.
+   *
+   * ⚠ Devuelve una fila por plan real, sin agrupar: «Pack 3» son cuatro. Y **también los no
+   * visibles**, que es donde está la mayoría de los suscriptores.
+   */
+  findSubscriptionPlans(context: CallerContext & { scope: Scope }): Promise<SubscriptionPlan[]> {
+    return this.get('/core/v1/subscription-plans', scopeToQuery(context.scope), context)
   }
 
   /**
