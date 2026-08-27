@@ -338,6 +338,8 @@ export interface UpcomingRenewal {
   customerType: CustomerType
   customerId: string
   customerName: string
+  /** Logo de la agencia o foto del artista, ya compuesta por el core. */
+  customerImageUrl: string | null
   planName: string | null
   planTag: string | null
   /** Familia del plan, para desambiguar el registro «Personalizado». */
