@@ -334,6 +334,10 @@ export interface UpcomingRenewal {
   customerType: CustomerType
   customerId: string
   customerName: string
+  planName: string | null
+  planTag: string | null
+  /** Familia del plan, para desambiguar el registro «Personalizado». */
+  planCommonTag: string | null
   /** `YYYY-MM-DD`. */
   date: string
   amount: number
