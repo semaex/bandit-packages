@@ -227,6 +227,14 @@ export interface SearchSubscriptionsParams {
    * cobro: un impago de hace un año no es algo que atender, es historia.
    */
   endsAfter?: string
+  /**
+   * Sólo las que acaban (o acabaron) la PRUEBA a partir de esta fecha (`YYYY-MM-DD`). Lo usa el
+   * panel de últimos trials.
+   *
+   * ⚠ Una sola condición hace dos cosas: una prueba en curso acaba en el futuro y pasa el corte
+   * siempre; una caducada sólo pasa si se escapó hace poco.
+   */
+  trialEndsAfter?: string
   /** Familias de plan (`small`, `mini`…). Para los Personalizado, `NO_PLAN_FAMILY`. */
   planCommonTags?: string[]
   customerTypes?: CustomerType[]

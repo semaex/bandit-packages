@@ -119,6 +119,7 @@ export class CoreClient {
       usageLevels: params.usageLevels,
       usageTrends: params.usageTrends,
       endsAfter: params.endsAfter,
+      trialEndsAfter: params.trialEndsAfter,
       orderBy: params.orderBy,
       limit: params.limit,
       offset: params.offset
