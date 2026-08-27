@@ -129,6 +129,26 @@ export class CoreClient {
   }
 
   /**
+   * Pone a mano el precio anual pactado y la familia de una suscripción.
+   *
+   * ⚠ **Los dos van siempre juntos**: el core escribe lo que llega, así que omitir uno lo
+   * borra. Son la misma decisión comercial partida en dos columnas.
+   */
+  changeSubscriptionCommercialTerms(
+    customerType: CustomerType,
+    subscriptionId: string,
+    terms: { annualPrice: number | null; planCommonTag: string | null },
+    context: CallerContext
+  ): Promise<void> {
+    return this.send(
+      'PUT',
+      `/core/v1/subscriptions/${encodeURIComponent(customerType)}/${encodeURIComponent(subscriptionId)}/commercial-terms`,
+      terms,
+      context
+    )
+  }
+
+  /**
    * El catálogo de planes de los dos tipos de cliente.
    *
    * ⚠ Devuelve una fila por plan real, sin agrupar: «Pack 3» son cuatro. Y **también los no

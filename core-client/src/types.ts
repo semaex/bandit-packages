@@ -88,6 +88,13 @@ export interface SubscriptionRow {
   planName: string | null
   /** Familia comercial del plan (`small`, `mini`, `pro`…). `null` en los planes a medida. */
   planCommonTag: string | null
+  /**
+   * La familia puesta A MANO en la suscripción, si la hay.
+   *
+   * ⚠ No es lo mismo que `planCommonTag`: aquélla cae a la del plan cuando la suscripción no
+   * dice nada, así que no sirve para saber si hay un override que editar.
+   */
+  planCommonTagOverride: string | null
   planMaxArtists: number | null
   planIntervalType: number | null
   planPrice: number | null
