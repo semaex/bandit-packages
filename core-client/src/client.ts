@@ -10,6 +10,7 @@ import type {
   InvoiceDetail,
   BillingForecast,
   CustomerFlow,
+  CustomerType,
   CustomerInvoices,
   CustomerUsage,
   PaginatedInvoices,
@@ -401,6 +402,27 @@ export class CoreClient {
     context: CallerContext = {}
   ): Promise<null> {
     return this.send('POST', `/core/v1/artists/${encodeURIComponent(artistId)}/subscription/extend-grace`, { days }, context)
+  }
+
+  /**
+   * Da por terminada la suscripción de un cliente.
+   *
+   * ⚠ **`cancelOnGateway` es la decisión importante, no un detalle.** Si la suscripción se
+   * cobra por la pasarela hay que cancelarla también allí, o se le sigue cobrando a quien ya
+   * no es cliente. Si se factura a mano —los planes a medida— no hay nada que cancelar y
+   * pedirlo falla. Quien llama sabe cuál es el caso.
+   */
+  expireSubscription(
+    customerType: CustomerType,
+    customerId: string,
+    cancelOnGateway: boolean,
+    context: CallerContext = {}
+  ): Promise<null> {
+    const path = customerType === 'agency'
+      ? `/core/v1/agencies/${encodeURIComponent(customerId)}/subscription/expire`
+      : `/core/v1/artists/${encodeURIComponent(customerId)}/subscription/expire`
+
+    return this.send('POST', path, { cancelOnGateway }, context)
   }
 
   /**

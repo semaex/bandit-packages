@@ -127,6 +127,14 @@ export interface SubscriptionRow {
   cancelledAt: string | null
   isAutoRenewal: boolean
   /**
+   * Si la suscripción existe también en la pasarela de pago.
+   *
+   * ⚠ Lo necesita quien la da por terminada: la que se cobra por ahí hay que cancelarla también
+   * allí. No vale mirar el plan — casi todas las «Personalizado» no tienen pasarela, pero
+   * alguna sí, y hay packs normales que tampoco.
+   */
+  hasGatewaySubscription: boolean
+  /**
    * Lo facturado a este cliente en toda su vida, sin IVA y neto de abonos.
    *
    * Cuelga del cliente y no de la suscripción, así que sobrevive a que ésta se borre y se
