@@ -202,6 +202,8 @@ export interface SearchSubscriptionsParams {
   /** Familias de plan (`small`, `mini`…). Para los Personalizado, `NO_PLAN_FAMILY`. */
   planCommonTags?: string[]
   customerTypes?: CustomerType[]
+  /** Clientes concretos, por id de agencia o de artista. */
+  customerIds?: string[]
   /** Solo agencias que ya han llegado a su tope. Deja fuera a los artistas. */
   atCapOnly?: boolean
   /** Excluye las suscripciones de cortesía (importe puesto a 0 a mano). */
@@ -381,6 +383,16 @@ export interface CustomerFlowSeries {
   totals: { joined: number; left: number; active: number }
 }
 
+/** Un cliente en la serie de altas y bajas. `leftAt` a null es que sigue siendo cliente. */
+export interface CustomerFlowCustomer {
+  customerType: CustomerType
+  customerId: string
+  customerName: string | null
+  customerImageUrl: string | null
+  joinedAt: string
+  leftAt: string | null
+}
+
 /**
  * La serie entera y una por tipo de cliente.
  *
@@ -392,6 +404,8 @@ export interface CustomerFlow {
   all: CustomerFlowSeries
   agency: CustomerFlowSeries
   artist: CustomerFlowSeries
+  /** La lista de la que salen las tres series, para poder abrir un periodo. */
+  customers: CustomerFlowCustomer[]
 }
 
 export interface BinaryResponse {

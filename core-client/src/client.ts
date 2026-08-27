@@ -110,6 +110,7 @@ export class CoreClient {
       statuses: params.statuses,
       planCommonTags: params.planCommonTags,
       customerTypes: params.customerTypes,
+      customerIds: params.customerIds,
       atCapOnly: params.atCapOnly,
       onlyBilled: params.onlyBilled,
       notCancelled: params.notCancelled,
