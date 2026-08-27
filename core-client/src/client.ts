@@ -405,22 +405,24 @@ export class CoreClient {
   }
 
   /**
-   * Da por terminada la suscripción de un cliente.
+   * Desactiva a un cliente: caduca su suscripción y deja fuera a la agencia o al artista que
+   * hay detrás. «Cliente» es el vocabulario de la pantalla —la unión de los dos—; lo que se
+   * desactiva es siempre una de esas dos cosas.
    *
    * ⚠ **`cancelOnGateway` es la decisión importante, no un detalle.** Si la suscripción se
    * cobra por la pasarela hay que cancelarla también allí, o se le sigue cobrando a quien ya
    * no es cliente. Si se factura a mano —los planes a medida— no hay nada que cancelar y
    * pedirlo falla. Quien llama sabe cuál es el caso.
    */
-  expireSubscription(
+  deactivateCustomer(
     customerType: CustomerType,
     customerId: string,
     cancelOnGateway: boolean,
     context: CallerContext = {}
   ): Promise<null> {
     const path = customerType === 'agency'
-      ? `/core/v1/agencies/${encodeURIComponent(customerId)}/subscription/expire`
-      : `/core/v1/artists/${encodeURIComponent(customerId)}/subscription/expire`
+      ? `/core/v1/agencies/${encodeURIComponent(customerId)}/deactivate`
+      : `/core/v1/artists/${encodeURIComponent(customerId)}/deactivate`
 
     return this.send('POST', path, { cancelOnGateway }, context)
   }
