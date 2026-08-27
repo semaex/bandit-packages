@@ -375,10 +375,23 @@ export interface CustomerFlowPeriod {
   active: number
 }
 
-export interface CustomerFlow {
+export interface CustomerFlowSeries {
   months: CustomerFlowPeriod[]
   years: CustomerFlowPeriod[]
   totals: { joined: number; left: number; active: number }
+}
+
+/**
+ * La serie entera y una por tipo de cliente.
+ *
+ * ⚠ Vienen las tres calculadas y no una filtrada, porque **el acumulado no se puede repartir
+ * por partes**: el de agencias no es el total menos el de artistas en ningún mes concreto.
+ * Las tres comparten rango de periodos, así que el eje no se mueve al cambiar de pestaña.
+ */
+export interface CustomerFlow {
+  all: CustomerFlowSeries
+  agency: CustomerFlowSeries
+  artist: CustomerFlowSeries
 }
 
 export interface BinaryResponse {
