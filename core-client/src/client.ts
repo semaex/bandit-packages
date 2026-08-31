@@ -498,8 +498,23 @@ export class CoreClient {
     return this.request<T>('GET', queryString ? `${path}?${queryString}` : path, '', context)
   }
 
+  /**
+   * Cualquier método con cuerpo. Para GET está `get()`, que además arma la query.
+   *
+   * ⚠ **Un GET o un HEAD van SIN cuerpo, aunque se pase uno.** `fetch` no lo permite y revienta
+   * con «Request with GET/HEAD method cannot have body»: le tumbó el `home-context` entero al BFF
+   * móvil y, como la llamada estaba dentro de un `catch` de fallo suave, el calendario se quedó
+   * sin colores en silencio. Un fallo que depende de acordarse de qué método se está usando se
+   * repite con cada BFF nuevo, así que se corta aquí.
+   *
+   * Se descarta y no se avisa porque no había nada que perder: ese cuerpo nunca llegó a salir
+   * —la petición no se hacía— y el core lee sus parámetros de la query. Y la firma cuadra igual:
+   * un GET siempre se ha firmado con el cuerpo vacío, que es lo que hace `get()`.
+   */
   async send<T>(method: string, path: string, body: unknown, context: CallerContext = {}): Promise<T> {
-    return this.request<T>(method, path, JSON.stringify(body ?? {}), context)
+    const withoutBody = ['GET', 'HEAD'].includes(method.toUpperCase())
+
+    return this.request<T>(method, path, withoutBody ? '' : JSON.stringify(body ?? {}), context)
   }
 
   private async request<T>(
