@@ -10,6 +10,13 @@ export enum SubscriptionStatus {
 }
 
 /** Espejo de `App\Agency\Domain\AgencyStatus` y `App\Artist\Domain\ArtistStatus` (comparten valores). */
+/**
+ * El estado de la AGENCIA o del ARTISTA, que no es el de su suscripción.
+ *
+ * ⚠ El corte de servicio real lo decide éste —lo mueve el cron—, no la suscripción. Y las dos
+ * caducidades no se parecen: una prueba vencida deja la agencia en `Expired` y al artista en
+ * `Active`.
+ */
 export enum SubscriberStatus {
   Active = 1,
   Deactivated = 2,
