@@ -2,7 +2,7 @@
   "name": "@bandit/core-client",
   "version": "0.1.0",
   "private": true,
-  "description": "Cliente compartido del contrato core+BFF de bandit/api (/core/v1): firma HMAC, alcance y tipos.",
+  "description": "Cliente compartido del contrato core+BFF de bandit/core (/core/v1): firma HMAC, alcance y tipos.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

@@ -2,7 +2,7 @@ import { createHash, createHmac, randomBytes } from 'node:crypto'
 
 /**
  * Contrato de firma del canal BFF→core, espejo exacto de
- * `bandit/api/src/Core/Shared/Infrastructure/Security/CoreSignedRequest.php`.
+ * `bandit/core/src/Core/Shared/Infrastructure/Security/CoreSignedRequest.php`.
  *
  * Cadena canónica (saltos de línea literales):
  *

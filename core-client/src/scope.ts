@@ -1,6 +1,6 @@
 /**
  * Alcance ya resuelto que el BFF pasa al core. Espejo de
- * `bandit/api/src/Core/Shared/Domain/Scope/ScopeConstraint.php`.
+ * `bandit/core/src/Core/Shared/Domain/Scope/ScopeConstraint.php`.
  *
  * El core NO resuelve identidad: quién es el usuario y sobre qué puede actuar lo decide
  * el BFF y viaja como parámetro de la petición. Por eso el alcance es obligatorio en

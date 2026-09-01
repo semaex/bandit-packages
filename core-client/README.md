@@ -1,6 +1,6 @@
 # @bandit/core-client
 
-Cliente del **contrato nuevo** de `bandit/api` (`/core/v1`), compartido por todos los BFFs.
+Cliente del **contrato nuevo** de `bandit/core` (`/core/v1`), compartido por todos los BFFs.
 
 Nació con `bandit/backoffice` y lo adoptarán `mobile-app-bff`, `public-api` y el servidor MCP.
 Plan y decisiones: `bandit/API_PUBLICA_MCP_PLAN.md` (§6 y §9.1).
