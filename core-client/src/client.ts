@@ -2,6 +2,11 @@ import { SIGNATURE_HEADERS, encodeQuery, signRequest } from './signature'
 import { type Scope, scopeToQuery } from './scope'
 import type {
   AgencyArtist,
+  ConcertCalendarDay,
+  ConcertRow,
+  ConcertsSummary,
+  ConcertYear,
+  SearchConcertsOverviewParams,
   AgencyOption,
   ArtistDetail,
   ArtistRow,
@@ -447,17 +452,82 @@ export class CoreClient {
    * no es cliente. Si se factura a mano —los planes a medida— no hay nada que cancelar y
    * pedirlo falla. Quien llama sabe cuál es el caso.
    */
-  deactivateCustomer(
+  /**
+   * Cancela la suscripción: **deja de cobrarse y nada más**.
+   *
+   * Marca la baja, apaga la renovación automática y le dice a Stripe `cancel_at_period_end`. El
+   * cliente conserva lo que ha pagado hasta el final del ciclo y a partir de ahí es el cron
+   * diario quien la pasa a gracia y luego a caducada.
+   *
+   * ⚠ **Esto y `deactivateCustomer` eran una sola llamada, y juntarlas costó un cliente.** Dar
+   * de baja a alguien que pagaba y no usaba la plataforma lo sacaba además de su propia app.
+   *
+   * ⚠ **Exige suscripción ACTIVA y plan no personalizado**, y lo impone el dominio del core: una
+   * prueba no se cancela y un plan a medida no se cobra por pasarela. En esos casos, 409 — lo
+   * que aplica ahí es `expireCustomerSubscription`.
+   */
+  cancelCustomerSubscription(
+    customerType: CustomerType,
+    customerId: string,
+    context: CallerContext = {}
+  ): Promise<null> {
+    const path = customerType === 'agency'
+      ? `/core/v1/agencies/${encodeURIComponent(customerId)}/subscription/cancel`
+      : `/core/v1/artists/${encodeURIComponent(customerId)}/subscription/cancel`
+
+    return this.send('POST', path, {}, context)
+  }
+
+  /**
+   * Caduca la suscripción AHORA, sin esperar a que se agote lo pagado.
+   *
+   * ⚠ **Cancelar es lo normal; esto es la excepción.** Sólo para lo que no se puede cancelar
+   * —planes a medida, pruebas— o cuando hay devolución de por medio y no hay periodo que
+   * respetar.
+   *
+   * ⚠ **`cancelOnGateway` viaja explícito**: si se cobra por la pasarela hay que cancelarlo
+   * también allí; si se factura a mano, pedirlo falla.
+   */
+  expireCustomerSubscription(
     customerType: CustomerType,
     customerId: string,
     cancelOnGateway: boolean,
     context: CallerContext = {}
   ): Promise<null> {
     const path = customerType === 'agency'
+      ? `/core/v1/agencies/${encodeURIComponent(customerId)}/subscription/expire`
+      : `/core/v1/artists/${encodeURIComponent(customerId)}/subscription/expire`
+
+    return this.send('POST', path, { cancelOnGateway }, context)
+  }
+
+  /**
+   * Aparta a la agencia o al artista. NO toca la suscripción.
+   *
+   * ⚠ **Exige que esté ya caducada** y el core contesta 409 si no (`artist_is_subscribed` /
+   * `agency_is_subscribed`): quien sigue suscrito sigue contando como cliente y, si se cobra por
+   * la pasarela, sigue cobrándose.
+   */
+  deactivateCustomer(
+    customerType: CustomerType,
+    customerId: string,
+    context: CallerContext = {}
+  ): Promise<null> {
+    const path = customerType === 'agency'
       ? `/core/v1/agencies/${encodeURIComponent(customerId)}/deactivate`
       : `/core/v1/artists/${encodeURIComponent(customerId)}/deactivate`
 
-    return this.send('POST', path, { cancelOnGateway }, context)
+    return this.send('POST', path, {}, context)
+  }
+
+  /**
+   * Deshace la desactivación de un ARTISTA. No reactiva su suscripción.
+   *
+   * ⚠ **No hay equivalente para agencias**: `Agency` no tiene `activate()` en el dominio y no se
+   * ha inventado — reactivar una agencia arrastra a los artistas que cayeron con ella.
+   */
+  reactivateArtistCustomer(artistId: string, context: CallerContext = {}): Promise<null> {
+    return this.send('POST', `/core/v1/artists/${encodeURIComponent(artistId)}/reactivate`, {}, context)
   }
 
   /**
@@ -488,6 +558,55 @@ export class CoreClient {
     context: CallerContext = {}
   ): Promise<null> {
     return this.send('PUT', `/core/v1/agencies/${encodeURIComponent(agencyId)}/subscription/max-artists`, { maxArtists }, context)
+  }
+
+  // -------------------------------------------------------------------- conciertos
+
+  /**
+   * Listado de conciertos de toda la plataforma.
+   *
+   * ⚠ **No es `searchConcerts` del panel del promotor**: aquélla devuelve el concierto entero
+   * con sus partes, y ésta contesta cuántos hay, de quién y cuándo.
+   */
+  searchConcertsOverview(
+    params: SearchConcertsOverviewParams,
+    context: CallerContext & { scope: Scope }
+  ): Promise<Paginated<ConcertRow>> {
+    return this.get('/core/v1/concerts/overview', { ...scopeToQuery(context.scope), ...params }, context)
+  }
+
+  /** Los recuentos del listado, con los MISMOS filtros que él. */
+  findConcertsSummary(
+    params: SearchConcertsOverviewParams,
+    context: CallerContext & { scope: Scope }
+  ): Promise<ConcertsSummary> {
+    return this.get('/core/v1/concerts/summary', { ...scopeToQuery(context.scope), ...params }, context)
+  }
+
+  /**
+   * Cuántos conciertos hay cada día entre dos fechas.
+   *
+   * ⚠ El rango es SUYO y no el del listado: se mira un año entero aunque la tabla esté acotada
+   * a una semana. El core lo topa en 550 días.
+   */
+  findConcertsCalendar(
+    range: { from: string; to: string },
+    params: SearchConcertsOverviewParams,
+    context: CallerContext & { scope: Scope }
+  ): Promise<ConcertCalendarDay[]> {
+    return this.get(
+      '/core/v1/concerts/calendar',
+      { ...scopeToQuery(context.scope), ...params, ...range },
+      context
+    )
+  }
+
+  /** Conciertos por año, de toda la historia. Son quince filas: no lleva rango. */
+  findConcertsYearly(
+    params: SearchConcertsOverviewParams,
+    context: CallerContext & { scope: Scope }
+  ): Promise<ConcertYear[]> {
+    return this.get('/core/v1/concerts/yearly', { ...scopeToQuery(context.scope), ...params }, context)
   }
 
   // ---------------------------------------------------------------------- genérico

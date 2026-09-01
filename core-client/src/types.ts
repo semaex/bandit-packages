@@ -244,6 +244,96 @@ export interface SubscriptionPlan {
   subscriptions: number
 }
 
+/**
+ * Un concierto visto desde arriba: quién, dónde y cuándo.
+ *
+ * ⚠ **Una fila por CONCIERTO, con el rango de fechas que ocupa.** Un concierto puede durar
+ * varios días —residencias, festivales—: son 84.000 fechas para 74.000 conciertos.
+ */
+export interface ConcertRow {
+  id: string
+  name: string | null
+  /** 1 opción, 2 booking, 3 confirmado, 4 cancelado. */
+  status: number
+  city: string | null
+  countryId: string | null
+  regionName: string | null
+  artistId: string
+  artistName: string | null
+  artistImageUrl: string | null
+  /** 1 usuario, 2 agencia. De quién es el ARTISTA, que es quien tiene el concierto. */
+  ownerType: number | null
+  ownerId: string | null
+  ownerName: string | null
+  /** Sólo si es una agencia: un artista de usuario no tiene logo, cae a sus iniciales. */
+  ownerImageUrl: string | null
+  /**
+   * Con qué usuario se entra en la app para ver este concierto.
+   *
+   * ⚠ Lo resuelve el CORE: para un artista de una agencia es el dueño de la agencia, y para uno
+   * de un usuario es él. `null` si no queda ninguno —una agencia borrada—, que es lo que usa la
+   * tabla para no ofrecer el botón.
+   */
+  impersonationUserId: string | null
+  firstDate: string
+  lastDate: string
+  /** Cuántos días ocupa. */
+  dates: number
+  createdAt: string | null
+}
+
+export interface ConcertsSummary {
+  concerts: number
+  confirmed: number
+  /** Días de concierto: las residencias y los festivales ocupan varios. */
+  days: number
+  artists: number
+  /**
+   * De quién cuelgan esos artistas.
+   *
+   * ⚠ **No son clientes**: son las agencias y los usuarios con conciertos en el periodo, tengan
+   * suscripción o no. La cifra de clientes vive en la pantalla de suscripciones y no coincide.
+   */
+  ownerAgencies: number
+  ownerUsers: number
+  cities: number
+}
+
+/**
+ * Cuántos conciertos hay un día, por estado.
+ *
+ * ⚠ Cuenta FECHAS: una residencia de tres días ocupa tres.
+ */
+export interface ConcertCalendarDay {
+  date: string
+  concerts: number
+  confirmed: number
+  booking: number
+  options: number
+  cancelled: number
+}
+
+/** Cuántos conciertos hubo un año. ⚠ Cuenta fechas, como el calendario. */
+export interface ConcertYear {
+  year: number
+  concerts: number
+  confirmed: number
+  booking: number
+  options: number
+  cancelled: number
+}
+
+export interface SearchConcertsOverviewParams {
+  terms?: string
+  statuses?: number[]
+  /** `YYYY-MM-DD`. Un concierto entra si ALGUNA de sus fechas cae dentro. */
+  from?: string
+  to?: string
+  orderBy?: string
+  limit?: number
+  offset?: number
+}
+
 export interface SearchSubscriptionsParams {
   terms?: string
   statuses?: SubscriptionStatus[]
