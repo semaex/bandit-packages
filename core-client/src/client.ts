@@ -2,6 +2,11 @@ import { SIGNATURE_HEADERS, encodeQuery, signRequest } from './signature'
 import { type Scope, scopeToQuery } from './scope'
 import type {
   AgencyArtist,
+  ContactDetail,
+  ContactListParams,
+  ContactOwnerFacet,
+  ContactRow,
+  ContactUpdateBody,
   ConcertCalendarDay,
   ConcertRow,
   ConcertsSummary,
@@ -528,6 +533,99 @@ export class CoreClient {
    */
   reactivateArtistCustomer(artistId: string, context: CallerContext = {}): Promise<null> {
     return this.send('POST', `/core/v1/artists/${encodeURIComponent(artistId)}/reactivate`, {}, context)
+  }
+
+  /**
+   * El listado de contactos del backoffice.
+   *
+   * ⚠ **Sin `owner` devuelve los de TODAS las cuentas**, que es justo lo que hace falta para
+   * repasar — y por eso exige alcance sin restricción. Un alcance acotado que omita el dueño se
+   * lleva un 403.
+   *
+   * ⚠ **No excluye nada por defecto**, a diferencia del autocompletado del panel del promotor:
+   * una pantalla de administración tiene que poder ver justo lo que aquél esconde. El filtro lo
+   * pone quien llama.
+   */
+  listContacts(
+    params: ContactListParams,
+    context: CallerContext & { scope: Scope }
+  ): Promise<Paginated<ContactRow>> {
+    return this.send('POST', '/core/v1/contacts/list', { scope: context.scope, ...params }, context)
+  }
+
+  /**
+   * Quién tiene contactos y cuántos, para el desplegable de cliente.
+   *
+   * ⚠ **Endpoint aparte y no un campo del listado**, a propósito: dentro se recalcularía en cada
+   * página y el desplegable no cambia al paginar. Se pide al abrir y al cambiar de filtros.
+   *
+   * ⚠ **Exige alcance sin restricción** (403 si no): preguntar quién tiene agenda es preguntar por
+   * todas las cuentas a la vez. Y no pagina — son 177 y crecen con los clientes, no con los
+   * contactos; nadie pagina un desplegable.
+   */
+  listContactOwners(
+    params: Omit<ContactListParams, 'owner' | 'orderBy' | 'direction' | 'limit' | 'offset'>,
+    context: CallerContext & { scope: Scope }
+  ): Promise<{ owners: ContactOwnerFacet[] }> {
+    return this.send('POST', '/core/v1/contacts/owners', { scope: context.scope, ...params }, context)
+  }
+
+  findContact(
+    contactId: string,
+    context: CallerContext & { scope: Scope }
+  ): Promise<{ contact: ContactDetail }> {
+    return this.send('POST', `/core/v1/contacts/${encodeURIComponent(contactId)}`, { scope: context.scope }, context)
+  }
+
+  /**
+   * ⚠ **Operaciones explícitas, nunca la lista entera.** El core aplica lo que llega, así que
+   * mandar todos los teléfonos para cambiar uno borraría los que se omitan.
+   */
+  updateContact(
+    contactId: string,
+    body: ContactUpdateBody,
+    context: CallerContext & { scope: Scope }
+  ): Promise<unknown> {
+    return this.send(
+      'POST',
+      `/core/v1/contacts/${encodeURIComponent(contactId)}/update`,
+      { scope: context.scope, ...body },
+      context
+    )
+  }
+
+  /**
+   * Da un contacto por revisado, o lo devuelve a la cola con `reviewed: false`.
+   *
+   * ⚠ **Una sola llamada porque es UNA decisión.** Quita la etiqueta `needs_review` y confirma el
+   * log de migración; separarlo obligaría a cada cliente a saber que existe un log, y al primero
+   * que se le olvidara dejaría contactos en circulación enseñando motivos de revisión.
+   */
+  markContactReviewed(
+    contactId: string,
+    reviewed: boolean,
+    context: CallerContext & { scope: Scope }
+  ): Promise<unknown> {
+    return this.send(
+      'POST',
+      `/core/v1/contacts/${encodeURIComponent(contactId)}/mark-reviewed`,
+      { scope: context.scope, reviewed },
+      context
+    )
+  }
+
+  /** Fusiona duplicados en el superviviente. La migración los crea, así que hace falta desde el día uno. */
+  mergeContacts(
+    survivorId: string,
+    absorbedContactIds: string[],
+    context: CallerContext & { scope: Scope }
+  ): Promise<unknown> {
+    return this.send(
+      'POST',
+      `/core/v1/contacts/${encodeURIComponent(survivorId)}/merge`,
+      { scope: context.scope, absorbedContactIds },
+      context
+    )
   }
 
   /**

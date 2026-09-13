@@ -806,3 +806,122 @@ export interface SearchArtistsParams {
   limit?: number
   offset?: number
 }
+
+/**
+ * Un canal de contacto —teléfono o email— del agregado `Contact` de `bandit/core`.
+ *
+ * ⚠ **`value` es lo que escribió la persona; `normalized` es la clave de comparación.** Se enseña
+ * SIEMPRE `value`: este campo lleva veinte años recibiendo lo que a cada cual le venía bien, y
+ * reescribirlo en pantalla sería decirle a alguien que puso otra cosa.
+ *
+ * ⚠ **`actionable: false` significa que no se pudo interpretar**: se ve, pero no se ofrece llamar
+ * ni escribir. Un dato visible que no se puede pulsar es mejor que un botón sobre un número
+ * troceado — de los 82.682 teléfonos de producción hay 4.102 que no son un teléfono.
+ */
+export interface ContactChannel {
+  id: string
+  value: string
+  normalized: string | null
+  label: string | null
+  isPrimary: boolean
+  actionable: boolean
+}
+
+/**
+ * Una fila del listado de contactos (`POST /core/v1/contacts/list`).
+ *
+ * ⚠ **`usageCount` es en cuántos conciertos se usa, y no es decorativo**: editar un contacto los
+ * cambia todos. Es además el criterio de orden por defecto de la revisión — repasar por orden
+ * alfabético deja para el final al que aparece en 51 conciertos.
+ *
+ * ⚠ **`reviewReasons` dice POR QUÉ hay que revisarlo**, y viene del log de migración, no del
+ * contacto: es un hecho de cómo se migró esa fila. Sigue siendo legible después de darlo por
+ * bueno; lo que desaparece del filtro es el aviso, no la historia.
+ */
+export interface ContactOwner {
+  type: 'agency' | 'user'
+  id: string
+  name: string | null
+  /**
+   * ⚠ **URL absoluta ya resuelta por el core**, como el `ownerImageUrl` de los conciertos. La
+   * componía el cliente a partir del nombre de fichero y era un error: la carpeta cambia según el
+   * tipo de dueño (`agency-images/` o `user-images/`), así que cada cliente tendría que conocer el
+   * bucket, el entorno y esa bifurcación.
+   */
+  imageUrl: string | null
+}
+
+export interface ContactRow {
+  id: string
+  name: string | null
+  company: string | null
+  notes: string | null
+  owner: ContactOwner
+  usageCount: number
+  /**
+   * ⚠ **`lastUsedAt` sólo mira al pasado y `nextUseAt` sólo al futuro, y por eso son dos.**
+   * Con una sola fecha, ordenar por «visto hace poco» subiría arriba a quien todavía no ha
+   * trabajado contigo. Son fechas de CONCIERTO, no de edición: después de la migración todas las
+   * filas comparten `updated_at`, así que ordenar por lo tocado se habría quedado ciego de golpe.
+   */
+  firstUsedAt: string | null
+  lastUsedAt: string | null
+  nextUseAt: string | null
+  updatedAt: string | null
+  reviewReasons: string | null
+  phones: ContactChannel[]
+  emails: ContactChannel[]
+  /** Los papeles que ha hecho, derivados de sus entradas en los conciertos. */
+  roles: string[]
+  needsReview: boolean
+}
+
+/** La ficha: la fila más las fechas del agregado y el estado de revisión. */
+export interface ContactDetail extends ContactRow {
+  createdAt: string | null
+  review: { status: string | null; reasons: string[]; reviewedAt: string | null } | null
+}
+
+/** Lo que admite el listado. El alcance lo pone el cliente, no esto. */
+export interface ContactListParams {
+  owner?: { type: 'agency' | 'user'; id: string }
+  terms?: string
+  roles?: string[]
+  onlyNeedingReview?: boolean
+  orderBy?: 'name' | 'company' | 'usageCount' | 'lastUsedAt' | 'updatedAt' | 'createdAt'
+  direction?: 'ASC' | 'DESC'
+  limit?: number
+  offset?: number
+}
+
+/**
+ * Las operaciones de edición de un contacto. ⚠ **Son explícitas, no se manda la lista entera**:
+ * con la lista completa, omitir un campo lo borraría.
+ */
+export interface ContactUpdateBody {
+  fields?: { name?: string | null; company?: string | null; notes?: string | null }
+  addPhones?: Array<{ value: string; label?: string | null; isPrimary?: boolean }>
+  addEmails?: Array<{ value: string; label?: string | null; isPrimary?: boolean }>
+  removePhoneIds?: string[]
+  removeEmailIds?: string[]
+  primaryPhoneId?: string
+  primaryEmailId?: string
+}
+
+/**
+ * Un dueño de la faceta de `POST /core/v1/contacts/owners`: quién tiene agenda y cuánta.
+ *
+ * ⚠ **Respeta los mismos filtros que la tabla, y hay que mandárselos.** Si la faceta cuenta un
+ * conjunto y la tabla otro, el desplegable ofrece clientes que devuelven cero — es lo que ya pasó
+ * con el resumen de suscripciones cuando los filtros de uso vivían sólo en el listado.
+ *
+ * ⚠ **NO se le manda el propio filtro de dueño**, evidentemente: la lista se reduciría al que ya
+ * está elegido y no habría forma de cambiar a otro.
+ */
+export interface ContactOwnerFacet {
+  type: 'agency' | 'user'
+  id: string
+  name: string | null
+  imageUrl: string | null
+  contactCount: number
+}
