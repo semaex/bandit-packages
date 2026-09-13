@@ -1,6 +1,11 @@
 import { SIGNATURE_HEADERS, encodeQuery, signRequest } from './signature'
 import { type Scope, scopeToQuery } from './scope'
 import type {
+  AgencyRosterSending,
+  AgencySmtpSettingsInput,
+  AgencySmtpTestInput,
+  SenderDomainCheck,
+  SenderDomainCheckParams,
   AgencyArtist,
   ContactDetail,
   ContactListParams,
@@ -69,6 +74,18 @@ export interface CoreClientOptions {
 export interface CallerContext {
   /** Viaja como `X-Acting-User-Id`. Informativo para logs y Sentry; el core nunca decide con él. */
   userId?: string | null
+}
+
+/**
+ * Ajustes de UNA llamada, para las pocas que no encajan con los del cliente.
+ *
+ * ⚠ Existe por la prueba de SMTP: habla con un servidor de terceros que puede tardar más que
+ * los 10 s por defecto, y un aborto por tiempo se reintentaba — o sea, se mandaba el correo de
+ * prueba dos veces. Una llamada con efectos fuera del core no se reintenta.
+ */
+export interface RequestOptions {
+  timeoutMs?: number
+  retries?: number
 }
 
 export class CoreRequestError extends Error {
@@ -658,6 +675,48 @@ export class CoreClient {
     return this.send('PUT', `/core/v1/agencies/${encodeURIComponent(agencyId)}/subscription/max-artists`, { maxArtists }, context)
   }
 
+  // ------------------------------------------------------------ envío de rosters
+
+  /** SMTP propio de la agencia (sin contraseña, nunca) y su cupo de envíos desde bandit.show. */
+  findAgencyRosterSending(agencyId: string, context: CallerContext = {}): Promise<AgencyRosterSending> {
+    return this.get(`/core/v1/agencies/${encodeURIComponent(agencyId)}/roster-sending`, {}, context)
+  }
+
+  /**
+   * Guarda el SMTP propio. Sin `password` (o vacía) el core conserva la guardada; volver a
+   * guardar con la misma cifra una contraseña que estaba en claro.
+   */
+  setAgencySmtp(agencyId: string, settings: AgencySmtpSettingsInput, context: CallerContext = {}): Promise<null> {
+    return this.send('PUT', `/core/v1/agencies/${encodeURIComponent(agencyId)}/roster-sending/smtp`, settings, context)
+  }
+
+  /** Quita el SMTP propio: la agencia vuelve a salir desde bandit.show, con cupo. */
+  removeAgencySmtp(agencyId: string, context: CallerContext = {}): Promise<null> {
+    return this.send('DELETE', `/core/v1/agencies/${encodeURIComponent(agencyId)}/roster-sending/smtp`, {}, context)
+  }
+
+  /**
+   * Manda un correo de prueba con los valores DADOS, sin guardarlos. 422
+   * `agency_smtp_test_failed` trae en `message` la respuesta del servidor SMTP.
+   *
+   * ⚠ **Sin reintentos y con más margen de tiempo**: el servidor es de terceros y puede tardar,
+   * y reintentar tras un aborto mandaría la prueba dos veces.
+   */
+  testAgencySmtp(agencyId: string, input: AgencySmtpTestInput, context: CallerContext = {}): Promise<null> {
+    return this.send(
+      'POST',
+      `/core/v1/agencies/${encodeURIComponent(agencyId)}/roster-sending/smtp/test`,
+      input,
+      context,
+      { timeoutMs: 45_000, retries: 0 }
+    )
+  }
+
+  /** SPF, DKIM, DMARC y MX del dominio remitente. Consulta DNS en vivo: margen de tiempo extra. */
+  checkSenderDomain(params: SenderDomainCheckParams, context: CallerContext = {}): Promise<SenderDomainCheck> {
+    return this.get('/core/v1/sender-domains/check', { ...params }, context, { timeoutMs: 20_000 })
+  }
+
   // -------------------------------------------------------------------- conciertos
 
   /**
@@ -709,10 +768,15 @@ export class CoreClient {
 
   // ---------------------------------------------------------------------- genérico
 
-  async get<T>(path: string, query: Record<string, unknown>, context: CallerContext = {}): Promise<T> {
+  async get<T>(
+    path: string,
+    query: Record<string, unknown>,
+    context: CallerContext = {},
+    options: RequestOptions = {}
+  ): Promise<T> {
     const queryString = encodeQuery(query)
 
-    return this.request<T>('GET', queryString ? `${path}?${queryString}` : path, '', context)
+    return this.request<T>('GET', queryString ? `${path}?${queryString}` : path, '', context, options)
   }
 
   /**
@@ -728,25 +792,32 @@ export class CoreClient {
    * —la petición no se hacía— y el core lee sus parámetros de la query. Y la firma cuadra igual:
    * un GET siempre se ha firmado con el cuerpo vacío, que es lo que hace `get()`.
    */
-  async send<T>(method: string, path: string, body: unknown, context: CallerContext = {}): Promise<T> {
+  async send<T>(
+    method: string,
+    path: string,
+    body: unknown,
+    context: CallerContext = {},
+    options: RequestOptions = {}
+  ): Promise<T> {
     const withoutBody = ['GET', 'HEAD'].includes(method.toUpperCase())
 
-    return this.request<T>(method, path, withoutBody ? '' : JSON.stringify(body ?? {}), context)
+    return this.request<T>(method, path, withoutBody ? '' : JSON.stringify(body ?? {}), context, options)
   }
 
   private async request<T>(
     method: string,
     requestUri: string,
     body: string,
-    context: CallerContext
+    context: CallerContext,
+    options: RequestOptions = {}
   ): Promise<T> {
-    const retries = this.options.retries ?? DEFAULT_RETRIES
+    const retries = options.retries ?? this.options.retries ?? DEFAULT_RETRIES
 
     let lastError: unknown
 
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
-        return await this.attempt<T>(method, requestUri, body, context)
+        return await this.attempt<T>(method, requestUri, body, context, options.timeoutMs)
       } catch (error) {
         lastError = error
 
@@ -765,7 +836,8 @@ export class CoreClient {
     method: string,
     requestUri: string,
     body: string,
-    context: CallerContext
+    context: CallerContext,
+    timeoutMs?: number
   ): Promise<T> {
     // ⚠ Se firma exactamente la misma cadena `requestUri` que se envía. Si se
     // reconstruyera la URL con `new URL()` podría renormalizarse y la firma no cuadraría.
@@ -789,7 +861,7 @@ export class CoreClient {
     }
 
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), this.options.timeoutMs ?? DEFAULT_TIMEOUT_MS)
+    const timeout = setTimeout(() => controller.abort(), timeoutMs ?? this.options.timeoutMs ?? DEFAULT_TIMEOUT_MS)
 
     try {
       const response = await fetch(`${this.baseUrl}${requestUri}`, {

@@ -925,3 +925,124 @@ export interface ContactOwnerFacet {
   imageUrl: string | null
   contactCount: number
 }
+
+// ------------------------------------------------------------ envío de rosters
+
+/** Cifrado de la conexión SMTP: STARTTLS (normalmente 587) o SSL/TLS implícito (465). */
+export type AgencySmtpSecurity = 'starttls' | 'ssl'
+
+/**
+ * El SMTP propio de una agencia tal como lo devuelve el core.
+ *
+ * ⚠ **La contraseña no viaja nunca de vuelta.** Para editar se deja vacía y el core conserva la
+ * guardada.
+ */
+export interface AgencySmtpReadable {
+  readable: true
+  /** Guardado a mano hace tiempo con la contraseña en claro; volver a guardarlo la cifra. */
+  legacy: boolean
+  /** ATOM. */
+  updatedAt: string
+  host: string
+  port: number
+  username: string
+  security: AgencySmtpSecurity
+  fromEmail: string
+}
+
+/** Hay un valor guardado que el core no sabe interpretar. */
+export interface AgencySmtpUnreadable {
+  readable: false
+}
+
+export type AgencySmtp = AgencySmtpReadable | AgencySmtpUnreadable
+
+export type RosterSendingQuotaStatus = 'ok' | 'warning' | 'limit_reached' | 'unlimited'
+
+/** Cupo de envíos desde bandit.show. Un email es un destinatario. */
+export interface RosterSendingQuota {
+  status: RosterSendingQuotaStatus
+  sentLast30Days: number
+  sentToday: number
+  monthlyLimit: number
+  dailyLimit: number
+  warningThreshold: number
+  windowDays: number
+  /** `null` cuando no hay límite (SMTP propio). */
+  remainingMonthly: number | null
+  remainingToday: number | null
+  hasOwnSmtp: boolean
+  ownSenderEmail: string | null
+  /**
+   * Si el cupo ya bloquea. Hasta `enforcedFrom` no se bloquea nada, pero `status` se calcula
+   * igual con el uso real: `limit_reached` con `enforced: false` es «por encima, sin aplicar».
+   */
+  enforced: boolean
+  /** `YYYY-MM-DD`. */
+  enforcedFrom: string
+}
+
+export interface AgencyRosterSending {
+  /** `null` = sale desde noreply@bandit.show. */
+  smtp: AgencySmtp | null
+  quota: RosterSendingQuota
+}
+
+export interface AgencySmtpSettingsInput {
+  host: string
+  port: number
+  username: string
+  /** Vacío u omitido al editar: el core conserva la guardada. */
+  password?: string
+  security: AgencySmtpSecurity
+  fromEmail: string
+}
+
+export interface AgencySmtpTestInput extends AgencySmtpSettingsInput {
+  /** A quién se manda la prueba. */
+  to: string
+}
+
+export type SenderDomainProviderKey = 'ionos' | 'google' | 'microsoft' | 'hostinger' | 'zoho' | 'ovh'
+
+export type SenderDomainSpfReason =
+  | 'no_record'
+  | 'multiple_records'
+  | 'allows_everyone'
+  | 'unknown_provider'
+  | 'provider_not_included'
+
+/**
+ * Autenticación DNS del dominio remitente. Dato canónico: el texto para humanos lo escribe
+ * cada cliente.
+ */
+export interface SenderDomainCheck {
+  domain: string
+  smtpHost: string
+  provider: { key: SenderDomainProviderKey; name: string } | null
+  mx: { status: 'ok' | 'missing'; records: string[] }
+  spf: {
+    status: 'ok' | 'warning' | 'missing' | 'error' | 'unknown'
+    reason: SenderDomainSpfReason | null
+    record: string | null
+    expectedIncludes: string[]
+  }
+  dkim: {
+    status: 'ok' | 'missing' | 'unknown'
+    /** `provider_mailbox`: buzón del propio proveedor (@gmail.com, @outlook.com…), que firma él. */
+    reason?: 'provider_mailbox' | null
+    selectorsFound: string[]
+    expectedSelectors: string[]
+  }
+  dmarc: {
+    status: 'ok' | 'missing'
+    record: string | null
+    policy: 'none' | 'quarantine' | 'reject' | null
+  }
+  overall: 'ok' | 'warning' | 'error'
+}
+
+export interface SenderDomainCheckParams {
+  fromEmail: string
+  smtpHost: string
+}
