@@ -548,6 +548,37 @@ export class CoreClient {
   }
 
   /**
+   * Emite a mano la factura anual de un cliente de plan a medida (serie `M`).
+   *
+   * ⚠ **NO avisa al cliente y NO renueva la suscripción.** El email lo manda una persona y la
+   * renovación es otra acción; lo único automático es que la factura entra en la contabilidad
+   * externa, y entra **pendiente de cobro**, porque la transferencia llega días después.
+   *
+   * ⚠ **El importe y el concepto van escritos.** Un plan a medida no tiene precio en el catálogo,
+   * así que no hay de dónde derivarlos. Lo que NO se manda es el número: lo asigna el core.
+   */
+  createManualInvoice(
+    customerType: CustomerType,
+    customerId: string,
+    invoice: {
+      id: string
+      concept: string
+      baseAmount: number
+      taxesAmount: number
+      taxesPercentage?: number
+      date?: string | null
+    },
+    context: CallerContext = {}
+  ): Promise<null> {
+    return this.send(
+      'POST',
+      `/core/v1/customers/${customerType}/${encodeURIComponent(customerId)}/manual-invoice`,
+      invoice,
+      context
+    )
+  }
+
+  /**
    * Alarga la prueba. ⚠ A diferencia de la gracia, el core **no** toma el máximo: fija
    * `trialEndsAt` a hoy + días, así que un valor menor que lo que queda la acorta. Y sólo
    * admite una prueba ya caducada.
