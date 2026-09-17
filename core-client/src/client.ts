@@ -519,6 +519,32 @@ export class CoreClient {
   }
 
   /**
+   * Renueva un plan a medida por otro ciclo igual que el que termina: un año más si fue un año,
+   * seis meses si fueron seis. Empieza el día después de que acabe el actual.
+   *
+   * ⚠ **`expectedEndsOn` (`YYYY-MM-DD`) es el día en que la pantalla dijo que acabaría el ciclo
+   * nuevo.** Si el core calcula otro —un doble clic o una segunda pestaña que ya renovó— contesta
+   * 409 `subscription_renewal_outdated` en vez de regalar otro ciclo.
+   *
+   * ⚠ **NO emite la factura**, que es `createManualInvoice`. Y sólo planes a medida: los demás
+   * los renueva la pasarela al cobrar.
+   */
+  renewCustomerSubscription(
+    customerType: CustomerType,
+    customerId: string,
+    expectedEndsOn: string,
+    context: CallerContext = {}
+  ): Promise<null> {
+    const path = customerType === 'agency'
+      ? `/core/v1/agencies/${encodeURIComponent(customerId)}/subscription/renew`
+      : `/core/v1/artists/${encodeURIComponent(customerId)}/subscription/renew`
+
+    // Sin reintento: si la respuesta se pierde, el segundo intento ya daría 409 y parecería un
+    // fallo cuando la renovación sí se hizo.
+    return this.send('POST', path, { expectedEndsOn }, context, { retries: 0 })
+  }
+
+  /**
    * Aparta a la agencia o al artista. NO toca la suscripción.
    *
    * ⚠ **Exige que esté ya caducada** y el core contesta 409 si no (`artist_is_subscribed` /
