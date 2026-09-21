@@ -21,7 +21,9 @@ import type {
   BillingForecast,
   CustomerFlow,
   CustomerType,
+  CustomerBillingDataInput,
   CustomerInvoices,
+  InvoiceBillingData,
   CustomerUsage,
   PaginatedInvoices,
   SearchInvoicesParams,
@@ -600,6 +602,41 @@ export class CoreClient {
       'POST',
       `/core/v1/customers/${customerType}/${encodeURIComponent(customerId)}/manual-invoice`,
       invoice,
+      context
+    )
+  }
+
+  /**
+   * Los datos de facturación de la SUSCRIPCIÓN: con los que sale la próxima factura manual.
+   * `null` si no tiene, que es lo habitual en los planes a medida que nunca pasaron por el
+   * checkout. No son los de la última factura, que pueden ser otros.
+   */
+  findCustomerBillingData(
+    customerType: CustomerType,
+    customerId: string,
+    context: CallerContext = {}
+  ): Promise<{ billingData: InvoiceBillingData | null }> {
+    return this.get(
+      `/core/v1/customers/${customerType}/${encodeURIComponent(customerId)}/billing-data`,
+      {},
+      context
+    )
+  }
+
+  /**
+   * ⚠ **Se mandan todos los campos**: el core escribe lo que llega. El CIF es obligatorio en la
+   * UE y opcional fuera; si falta donde hace falta, 422 `invalid_billing_data`.
+   */
+  changeCustomerBillingData(
+    customerType: CustomerType,
+    customerId: string,
+    billingData: CustomerBillingDataInput,
+    context: CallerContext = {}
+  ): Promise<null> {
+    return this.send(
+      'PUT',
+      `/core/v1/customers/${customerType}/${encodeURIComponent(customerId)}/billing-data`,
+      billingData,
       context
     )
   }
