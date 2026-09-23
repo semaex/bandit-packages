@@ -546,6 +546,20 @@ export class CoreClient {
     return this.send('POST', path, { expectedEndsOn }, context, { retries: 0 })
   }
 
+  changeCustomerSubscriptionCycleEnd(
+    customerType: CustomerType,
+    customerId: string,
+    endsOn: string,
+    expectedEndsOn: string,
+    context: CallerContext = {}
+  ): Promise<null> {
+    const path = customerType === 'agency'
+      ? `/core/v1/agencies/${encodeURIComponent(customerId)}/subscription/ends-at`
+      : `/core/v1/artists/${encodeURIComponent(customerId)}/subscription/ends-at`
+
+    return this.send('PUT', path, { endsOn, expectedEndsOn }, context, { retries: 0 })
+  }
+
   /**
    * Aparta a la agencia o al artista. NO toca la suscripción.
    *
