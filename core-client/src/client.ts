@@ -251,6 +251,14 @@ export class CoreClient {
     return this.get('/core/v1/users/growth', scopeToQuery(context.scope), context)
   }
 
+  /**
+   * Cambia el email con el que el usuario entra en la plataforma. 409 `user_already_exists` si
+   * otro usuario lo tiene, 422 `email_invalid` si no es una dirección válida.
+   */
+  changeUserEmail(userId: string, email: string, context: CallerContext = {}): Promise<null> {
+    return this.send('PUT', `/core/v1/users/${encodeURIComponent(userId)}/email`, { email }, context)
+  }
+
   // ------------------------------------------------------------------ artistas
 
   /** Listado de artistas con su dueño —usuario o agencia— ya resuelto. */
