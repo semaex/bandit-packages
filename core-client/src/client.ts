@@ -26,7 +26,9 @@ import type {
   BillingForecast,
   CustomerFlow,
   CustomerType,
+  CustomerBillingDataInput,
   CustomerInvoices,
+  InvoiceBillingData,
   CustomerUsage,
   PaginatedInvoices,
   SearchInvoicesParams,
@@ -252,6 +254,14 @@ export class CoreClient {
   /** Altas de usuarios por año, con el acumulado y el reparto por tramo de actividad. */
   findUsersGrowth(context: CallerContext & { scope: Scope }): Promise<UsersGrowth> {
     return this.get('/core/v1/users/growth', scopeToQuery(context.scope), context)
+  }
+
+  /**
+   * Cambia el email con el que el usuario entra en la plataforma. 409 `user_already_exists` si
+   * otro usuario lo tiene, 422 `email_invalid` si no es una dirección válida.
+   */
+  changeUserEmail(userId: string, email: string, context: CallerContext = {}): Promise<null> {
+    return this.send('PUT', `/core/v1/users/${encodeURIComponent(userId)}/email`, { email }, context)
   }
 
   // ------------------------------------------------------------------ artistas
@@ -524,6 +534,46 @@ export class CoreClient {
   }
 
   /**
+   * Renueva un plan a medida por otro ciclo igual que el que termina: un año más si fue un año,
+   * seis meses si fueron seis. Empieza el día después de que acabe el actual.
+   *
+   * ⚠ **`expectedEndsOn` (`YYYY-MM-DD`) es el día en que la pantalla dijo que acabaría el ciclo
+   * nuevo.** Si el core calcula otro —un doble clic o una segunda pestaña que ya renovó— contesta
+   * 409 `subscription_renewal_outdated` en vez de regalar otro ciclo.
+   *
+   * ⚠ **NO emite la factura**, que es `createManualInvoice`. Y sólo planes a medida: los demás
+   * los renueva la pasarela al cobrar.
+   */
+  renewCustomerSubscription(
+    customerType: CustomerType,
+    customerId: string,
+    expectedEndsOn: string,
+    context: CallerContext = {}
+  ): Promise<null> {
+    const path = customerType === 'agency'
+      ? `/core/v1/agencies/${encodeURIComponent(customerId)}/subscription/renew`
+      : `/core/v1/artists/${encodeURIComponent(customerId)}/subscription/renew`
+
+    // Sin reintento: si la respuesta se pierde, el segundo intento ya daría 409 y parecería un
+    // fallo cuando la renovación sí se hizo.
+    return this.send('POST', path, { expectedEndsOn }, context, { retries: 0 })
+  }
+
+  changeCustomerSubscriptionCycleEnd(
+    customerType: CustomerType,
+    customerId: string,
+    endsOn: string,
+    expectedEndsOn: string,
+    context: CallerContext = {}
+  ): Promise<null> {
+    const path = customerType === 'agency'
+      ? `/core/v1/agencies/${encodeURIComponent(customerId)}/subscription/ends-at`
+      : `/core/v1/artists/${encodeURIComponent(customerId)}/subscription/ends-at`
+
+    return this.send('PUT', path, { endsOn, expectedEndsOn }, context, { retries: 0 })
+  }
+
+  /**
    * Aparta a la agencia o al artista. NO toca la suscripción.
    *
    * ⚠ **Exige que esté ya caducada** y el core contesta 409 si no (`artist_is_subscribed` /
@@ -550,6 +600,72 @@ export class CoreClient {
    */
   reactivateArtistCustomer(artistId: string, context: CallerContext = {}): Promise<null> {
     return this.send('POST', `/core/v1/artists/${encodeURIComponent(artistId)}/reactivate`, {}, context)
+  }
+
+  /**
+   * Emite a mano la factura anual de un cliente de plan a medida (serie `M`).
+   *
+   * ⚠ **NO avisa al cliente y NO renueva la suscripción.** El email lo manda una persona y la
+   * renovación es otra acción; lo único automático es que la factura entra en la contabilidad
+   * externa, y entra **pendiente de cobro**, porque la transferencia llega días después.
+   *
+   * ⚠ **El importe y el concepto van escritos.** Un plan a medida no tiene precio en el catálogo,
+   * así que no hay de dónde derivarlos. Lo que NO se manda es el número: lo asigna el core.
+   */
+  createManualInvoice(
+    customerType: CustomerType,
+    customerId: string,
+    invoice: {
+      id: string
+      concept: string
+      baseAmount: number
+      taxesAmount: number
+      taxesPercentage?: number
+      date?: string | null
+    },
+    context: CallerContext = {}
+  ): Promise<null> {
+    return this.send(
+      'POST',
+      `/core/v1/customers/${customerType}/${encodeURIComponent(customerId)}/manual-invoice`,
+      invoice,
+      context
+    )
+  }
+
+  /**
+   * Los datos de facturación de la SUSCRIPCIÓN: con los que sale la próxima factura manual.
+   * `null` si no tiene, que es lo habitual en los planes a medida que nunca pasaron por el
+   * checkout. No son los de la última factura, que pueden ser otros.
+   */
+  findCustomerBillingData(
+    customerType: CustomerType,
+    customerId: string,
+    context: CallerContext = {}
+  ): Promise<{ billingData: InvoiceBillingData | null }> {
+    return this.get(
+      `/core/v1/customers/${customerType}/${encodeURIComponent(customerId)}/billing-data`,
+      {},
+      context
+    )
+  }
+
+  /**
+   * ⚠ **Se mandan todos los campos**: el core escribe lo que llega. El CIF es obligatorio en la
+   * UE y opcional fuera; si falta donde hace falta, 422 `invalid_billing_data`.
+   */
+  changeCustomerBillingData(
+    customerType: CustomerType,
+    customerId: string,
+    billingData: CustomerBillingDataInput,
+    context: CallerContext = {}
+  ): Promise<null> {
+    return this.send(
+      'PUT',
+      `/core/v1/customers/${customerType}/${encodeURIComponent(customerId)}/billing-data`,
+      billingData,
+      context
+    )
   }
 
   /**

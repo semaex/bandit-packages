@@ -401,6 +401,17 @@ export interface InvoiceBillingData {
   country: string | null
 }
 
+/** Lo que se escribe en la suscripción. Mismo formato que se lee, pero sin nulos. */
+export interface CustomerBillingDataInput {
+  name: string
+  vatNumber: string
+  address: string
+  postalCode: string
+  city: string
+  /** ISO 3166-1 alfa-2 (`ES`, `US`). */
+  country: string
+}
+
 export interface CustomerInvoice {
   id: string
   /** Número tal y como se emitió (`:c/:yyyy/:s` y variantes por serie). */
